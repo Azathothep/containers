@@ -13,20 +13,22 @@ namespace ft
 	{
 
 	public:
-		typedef typename vector::value_type value_type;
-		typedef value_type *pointer;
-		typedef value_type &reference;
+		typedef typename	std::forward_iterator_tag	iterator_category;
+		typedef typename	std::ptrdiff_t				difference_type; 
+		typedef typename 	vector::value_type 			value_type;
+		typedef 			value_type*					pointer;
+		typedef 			value_type&					reference;
 
 	private:
-		pointer _pointer;
+		pointer _m_ptr;
 
 	public:
 		_vector_iterator() {}
-		_vector_iterator(pointer p) : _pointer(p) {}
+		_vector_iterator(pointer __p) : _m_ptr(__p) {}
 
 		_vector_iterator &operator++()
 		{
-			_pointer++;
+			_m_ptr++;
 			return *this;
 		}
 
@@ -39,7 +41,7 @@ namespace ft
 
 		_vector_iterator &operator--()
 		{
-			_pointer--;
+			_m_ptr--;
 			return *this;
 		}
 
@@ -52,22 +54,22 @@ namespace ft
 
 		reference operator[](int index)
 		{
-			return *(_pointer + index);
+			return *(_m_ptr + index);
 		}
 
 		pointer operator->()
 		{
-			return _pointer;
+			return _m_ptr;
 		}
 
 		reference operator*()
 		{
-			return *_pointer;
+			return *_m_ptr;
 		}
 
 		bool operator==(const _vector_iterator &rhs) const
 		{
-			return _pointer == rhs._pointer;
+			return _m_ptr == rhs._m_ptr;
 		}
 
 		bool operator!=(const _vector_iterator &rhs) const
@@ -92,7 +94,7 @@ namespace ft
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
 		typedef _vector_iterator< vector<T> > 							iterator;
-		typedef const _vector_iterator< vector<T> > 					const_iterator;
+		// typedef _vector_iterator< vector<T> > 						const_iterator;
 		// typedef typename reverse_iterator<iterator> 					reverse_iterator;
 		// typedef typename reverse_iterator<const_iterator> 			const_reverse_iterator;
 		// typedef typename iterator_traits<iterator>::difference_type 	difference_type;
