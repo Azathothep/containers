@@ -1,5 +1,1 @@
 
-
-namespace ft {
-
-}
