@@ -202,7 +202,10 @@ namespace ft
 			Debug::Log(std::string("Vector: " + Debug::ToStr(n) + " elements allocated at address " + Debug::ToStr(_memory)));
 
 			for (int i = 0; i < n; i++)
-				_allocator.construct(_memory + (i * sizeof(value_type)), val);
+			{
+				Debug::Log(std::string("Vector: constructing element " + Debug::ToStr(i) + " with value " + Debug::ToStr(val)));
+				_allocator.construct(_memory + i, val);
+			}
 		}
 
 		template <class InputIterator>
