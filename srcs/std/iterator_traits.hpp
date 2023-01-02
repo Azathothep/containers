@@ -2,6 +2,7 @@
 # define ITERATOR_TRAITS_HPP
 
 namespace ft {
+
 	template <class Iterator>
 	class iterator_traits {
 		public:
@@ -31,6 +32,7 @@ namespace ft {
 			typedef const T&						reference;
 			typedef std::random_access_iterator_tag	iterator_category;
 	};
+	
 }
 
 #endif

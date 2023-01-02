@@ -4,6 +4,7 @@
 #define VECTOR_HPP
 
 #include <memory>
+#include "../std/iterator_traits.hpp"
 
 namespace ft
 {
@@ -12,7 +13,7 @@ namespace ft
 	class vector
 	{
 
-		/* #region iterator */
+		/* #region iterators */
 
 		template <typename vector>
 		class _vector_iterator
@@ -153,12 +154,12 @@ namespace ft
 		typedef typename allocator_type::pointer pointer;
 		typedef typename allocator_type::const_pointer const_pointer;
 
-		typedef _vector_iterator<vector<T> > iterator;
-		// typedef _vector_iterator< vector<T> > 						const_iterator;
+		typedef _vector_iterator<vector<T> > 							iterator;
+		// typedef _vector_const_iterator< vector<T> > 					const_iterator;
 		// typedef typename reverse_iterator<iterator> 					reverse_iterator;
 		// typedef typename reverse_iterator<const_iterator> 			const_reverse_iterator;
-		// typedef typename iterator_traits<iterator>::difference_type 	difference_type;
-		typedef typename allocator_type::size_type size_type; // not sure if it's right
+		typedef typename iterator_traits<iterator>::difference_type 	difference_type;
+		typedef typename allocator_type::size_type 						size_type; // not sure if it's right
 
 		/* #endregion */
 
@@ -200,7 +201,8 @@ namespace ft
 			_memory = _allocator.allocate(n * sizeof(value_type));
 			Debug::Log(std::string("Vector: " + Debug::ToStr(n) + " elements allocated at address " + Debug::ToStr(_memory)));
 
-			_allocator.construct(_memory, val);
+			for (int i = 0; i < n; i++)
+				_allocator.construct(_memory + (i * sizeof(value_type)), val);
 		}
 
 		template <class InputIterator>
