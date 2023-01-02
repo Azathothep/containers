@@ -34,7 +34,8 @@ class Debug {
 			}
 		}
 
-		static std::string ToStr(unsigned long n) {
+		template < typename T >
+		static std::string ToStr(T n) {
 			std::stringstream ss;
 
 			ss << n;
