@@ -171,10 +171,14 @@ namespace ft
 			pointer _M_start;
 			pointer _M_finish;
 			pointer _M_end_of_storage;
+
+			pointer _M_end_addr() {
+				return (_M_end_of_storage + 1);
+			}
 		};
 
-		allocator_type _allocator;
-		pointer _memory;
+		allocator_type 	_allocator;
+		pointer 		_memory;
 
 		_vector_data _M_data;
 
@@ -240,15 +244,67 @@ namespace ft
 
 		void push_back(const value_type &__x)
 		{
+			Debug::Log("Vector: push_back())");
+
 			if (this->_M_data._M_finish != this->_M_data._M_end_of_storage)
 			{
+				Debug::Log("Vector: adding value to vector")
 				// add value
 			}
 			else
 			{
+				Debug::Log("Vector: reallocating");
 				// reallocate
 			}
 		}
+
+		void pop_back()
+		{
+			Debug::Log("Vector: pop_back()");
+
+			// is the vector non empty ?
+			if (empty())
+				return;
+			
+			// If non empty, the function never throws exceptions
+			// _Alloc_traits::destroy(this->_M_data, this->_M_data._M_finish);
+			// shrink size by 1
+		}
+
+		reference front()
+		{
+			_requires_nonempty();
+			return *begin()
+		}
+
+		reference back()
+		{
+			Debug::Log("Vector: back()");
+			return *(end() - 1);
+		}
+
+		bool empty() const {
+			Debug::Log("Vector: empty()");
+			return (size == 0);
+		}
+
+		size_type size() const {
+			return size_type(end() - begin());
+		}
+
+		size_type capacity() const {
+			return size_type(const_iterator(this->_M_data._M_end_addr(), 0) - begin());
+		}
+
+		void reserve(size_type __n) // throwing exception!
+		{
+			//if (__n > max_size())
+				//_throw_length_error(__N("vector::reserve"));
+
+			//if (capacity() < __n)
+				//_M_reallocate(__n);
+		}
+
 		/* #endregion */
 
 		/* #region private methods */
@@ -280,14 +336,25 @@ namespace ft
 			// this->_M_data._M_end_of_storage = __new_start + __len;
 		}
 
+		void _requires_nonempty()
+		{
+			_DEBUG_VERIFY(! this->empty(), "not empty");
+		}
+
+		void _DEBUG_VERIFY(bool _v, std::string _msg)
+		{
+			if (_v)
+				std::cerr << _msg << std::endl; // how to undifine behaviour ?
+		}
+
 		/* #endregion */
 
 		/* #region iterators  */
 
 	public:
-		iterator begin() { return iterator(_memory); }
+		iterator begin() { return iterator(this->_M_data._M_start); }
 		// const_iterator begin() const { return iterator(_memory); }
-		iterator end() { return iterator(&_memory[_size]); }
+		iterator end() { return iterator(this->_M_data._M_finish); }
 		// const_iterator end() const { return iterator(&_memory[_size]); }
 		// reverse_iterator rbegin();
 		// const_reverse_iterator rbegin() const;
