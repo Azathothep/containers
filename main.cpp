@@ -3,21 +3,33 @@
 
 int main(int argc, char **argv) {
 	
+	std::ofstream log;
+	log.open("log.txt", std::ofstream::out | std::ofstream::trunc);
+	log.close();
+
 	{
 		std::cout << "vector<int>" << std::endl;
 	
-		ft::vector<int> v(1);
+		ft::vector<int> v;
 
+		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
+
+		v.push_back(0);
+		v.push_back(1);
 		v.push_back(2);
 		v.push_back(3);
 		v.push_back(4);
+		v.pop_back();
 		v.push_back(5);
 		v.push_back(6);
+		v.push_back(7);
 
 		ft::vector<int>::const_iterator cit;
 
 		for (cit = v.cbegin(); cit != v.cend(); cit++)
 			std::cout << *cit << std::endl;
+
+		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
 	}
 
 	{

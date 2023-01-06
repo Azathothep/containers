@@ -203,18 +203,16 @@ namespace ft
 		/* #region constructors & destructor */
 		explicit vector(const allocator_type &alloc = allocator_type())
 		{
-			Debug::Log("Vector: Default Constructor Called");
+			Debug::Log << "Vector: Default Constructor Called" << std::endl;
 
 			_M_alloc = alloc;
 			
-			_M_data._M_start = NULL;
-			_M_data._M_finish = NULL;
-			_M_data._M_end_of_storage = NULL;
+			this->__create_storage(0);
 		}
 
 		explicit vector(size_type n, const value_type &val = value_type(), const allocator_type &alloc = allocator_type())
 		{
-			Debug::Log("Vector: Size Constructor Called");
+			Debug::Log << "Vector: Size Constructor Called" << std::endl;
 
 			_M_alloc = alloc;
 
@@ -226,17 +224,17 @@ namespace ft
 		template <class InputIterator>
 		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type())
 		{
-			Debug::Log("Vector: Iterator Constructor Called");
+			Debug::Log << "Vector: Iterator Constructor Called" << std::endl;
 		}
 
 		vector(const vector &x)
 		{
-			Debug::Log("Vector: Copy Constructor Called");
+			Debug::Log << "Vector: Copy Constructor Called" << std::endl;
 		}
 
 		~vector()
 		{
-			Debug::Log("Vector: Destructor Called");
+			Debug::Log << "Vector: Destructor Called" << std::endl;
 			
 			iterator it;
 			
@@ -250,35 +248,35 @@ namespace ft
 
 		vector &operator=(const vector &x)
 		{
-			Debug::Log("Vector: operator= Called");
+			Debug::Log << "Vector: operator= Called" << std::endl;
 		}
 
 		reference operator[](size_type n) {
-			Debug::Log(std::string("Vector: operator[" + Debug::ToStr(n) + "]"));
+			Debug::Log << "Vector: operator[" << n << "]" << std::endl;
 			return *(this->_M_data._M_start + n);
 		}
 
 		void push_back(const value_type &__x)
 		{
-			Debug::Log("Vector: push_back())");
+			Debug::Log << "Vector: push_back()" << std::endl;
 
 			if (this->_M_data._M_finish != this->_M_data._M_end_of_storage)
 			{
 				// add value
-				Debug::Log("Vector: adding value to vector");
+				Debug::Log << "Vector: adding value to vector" << std::endl;
 				this->__construct(this->_M_data._M_finish, __x);
 				__NOTIFY_GROWTH(1);
 			}
 			else
 			{
-				Debug::Log("Vector: size insufficient, reallocating...");
+				Debug::Log << "Vector: size insufficient, reallocating..." << std::endl;
 				_realloc_insert(end(), __x);
 			}
 		}
 
 		void pop_back()
 		{
-			Debug::Log("Vector: pop_back()");
+			Debug::Log << "Vector: pop_back()" << std::endl;
 
 			// is the vector non empty ?
 			if (empty())
@@ -298,12 +296,12 @@ namespace ft
 
 		reference back()
 		{
-			Debug::Log("Vector: back()");
+			Debug::Log << "Vector: back()"<< std::endl;
 			return *(end() - 1);
 		}
 
 		bool empty() const {
-			Debug::Log("Vector: empty()");
+			Debug::Log << "Vector: empty()" << std::endl;
 			return (this->size() == 0);
 		}
 
@@ -335,7 +333,7 @@ namespace ft
 	private:
 		void _fill(pointer __start, size_t __n, value_type __val)
 		{
-			Debug::Log(std::string("Vector: Filling " + Debug::ToStr(__n) + " elements"));
+			Debug::Log << "Vector: Filling " << __n << " elements" << std::endl;
 
 			iterator it;
 			iterator ite = iterator(__start + __n);
@@ -346,18 +344,18 @@ namespace ft
 
 		pointer __allocate(size_type __n)
 		{
-			Debug::Log(std::string("Vector: allocating for " + Debug::ToStr(__n) + " elements"));
+			Debug::Log << "Vector: allocating for " << __n << " elements" << std::endl;
 			return _M_alloc.allocate(__n);
 		}
 
 		void __construct(pointer __elem, value_type __val)
 		{
-			Debug::Log(std::string("Vector: constructing element at address " + Debug::ToStr(__elem)));
+			Debug::Log << "Vector: constructing element at address " << __elem << std::endl;
 			_M_alloc.construct(__elem, __val);
 		}
 
 		void __create_storage(size_t __n) {
-			Debug::Log(std::string("Vector: creating storage of capacity " + Debug::ToStr(__n)));
+			Debug::Log << "Vector: creating storage of capacity " << __n << std::endl;
 
 			this->_M_data._M_start = this->__allocate(__n);
 			this->_M_data._M_finish = this->_M_data._M_start;
@@ -366,7 +364,7 @@ namespace ft
 
 		void _realloc_insert(iterator __position, value_type val)
 		{
-			Debug::Log(std::string("Vector: realloc_inserting value " + Debug::ToStr(val) + " at position " + Debug::ToStr(&(*__position))));
+			Debug::Log << "Vector: realloc_inserting value " << val << " at position " << &(*__position) << std::endl;
 
 			pointer __old_start = this->_M_data._M_start;
 			pointer __old_finish = this->_M_data._M_finish;
@@ -374,17 +372,21 @@ namespace ft
 			const size_type __elems_before = __position - begin();
 			const size_type __elems_after = end() - __position;
 
-			// pointer __new_start(this->_M_allocate(__len));
-			// pointer __new_finish(__new_start);
-
 			try
 			{
 				// allocate memory & copy original vector to the new one
-				this->__create_storage(this->capacity() * 2);
+				size_type _new_capacity = (this->capacity() == 0 ? 5 : this->capacity() * 2);
+
+				this->__create_storage(_new_capacity);
+
 				this->_range_copy(__old_start, _M_data._M_start, __elems_before);
-				pointer __insert_position = _M_data._M_start + __elems_before + 1;
+
+				pointer __insert_position = _M_data._M_start + __elems_before;
 				*__insert_position = val;
+
 				this->_range_copy(__old_start + __elems_before, __insert_position + 1, __elems_after);
+
+				__NOTIFY_GROWTH(__elems_before + __elems_after + 1);
 			}
 			catch (std::exception &e)
 			{
@@ -393,24 +395,21 @@ namespace ft
 
 			// deallocate
 			_delete(__old_start, __old_finish);
-
-			// this->_M_data._M_start = __new_start;
-			// this->_M_data._M_finish = __new_finish;
-			// this->_M_data._M_end_of_storage = __new_start + __len;
 		}
 
 		void _range_copy(pointer _src, pointer _dest, size_type _size)
 		{
-			Debug::Log(std::string("Vector: Range copy of size " + Debug::ToStr(_size)));
+			Debug::Log << "Vector: Range copy of size " << _size << std::endl;
 
-			pointer p_src;
+			pointer p_src = _src;
 			pointer p_dest = _dest;
-			pointer _end = _src + _size;
 
-			for (p_src = _src; p_src != _end; p_src++)
+			// Move pointers, don't copy the object !
+			for (size_type i = 0; i < _size; i++)
 			{
-				// move, not copy!
-				p_dest = p_src; // this is copying
+				Debug::Log << "Copying value from " << p_src << " to " << p_dest << std::endl;
+				*p_dest = *p_src;
+				p_src++;
 				p_dest++;
 			}
 		}
@@ -420,19 +419,23 @@ namespace ft
 			iterator it;
 			iterator ite = iterator(__end);
 
-			Debug::Log(std::string("Vector: Deleting " + Debug::ToStr(__end - __start) + " elements"));
+			Debug::Log << "Vector: Deleting " << (__end - __start) << " elements" << std::endl;
 
 			for (it = iterator(__start); it != ite; it++)
+			{
+				Debug::Log << "Vector: Destroying element at address " << &(*it) << std::endl;
 				_M_alloc.destroy(&(*it));
+			}
 
 			size_type __n = __end - __start;
 
+			Debug::Log << "Vector: Deallocating..." << std::endl;
 			_M_alloc.deallocate(__start, __n);
 		}
 
 		void _shrink(size_type __n)
 		{
-			Debug::Log(std::string("Vector: Shrinking memory by " + Debug::ToStr(__n)));
+			Debug::Log << "Vector: Shrinking memory by " << __n << std::endl;
 			pointer __new_finish = _M_data._M_finish - __n;
 
 			if (__n > size())
@@ -442,9 +445,7 @@ namespace ft
 			iterator ite = iterator(_M_data._M_finish);
 
 			for (it = iterator(__new_finish); it != ite; it++)
-			{
 				this->_M_alloc.destroy(&(*it));
-			}
 
 			__NOTIFY_SHRINK(__n);
 		}
