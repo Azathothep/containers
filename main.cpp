@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
 		ft::vector<int>::reverse_iterator rit;
 
-		for (rit = v.rbegin() + 1; rit != (v.rend() + 1); rit++)
+		for (rit = v.rbegin(); rit != v.rend(); rit++)
 			std::cout << *rit << std::endl;
 	}
 
