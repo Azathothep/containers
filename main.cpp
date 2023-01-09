@@ -1,4 +1,6 @@
 #include "srcs/vector/vector.hpp"
+#include "srcs/std/reverse_iterator.hpp"
+#include "srcs/std/iterator_traits.hpp"
 #include <vector>
 
 int main(int argc, char **argv) {
@@ -24,12 +26,21 @@ int main(int argc, char **argv) {
 		v.push_back(6);
 		v.push_back(7);
 
+		std::cout << "const_iterator" << std::endl;
+
 		ft::vector<int>::const_iterator cit;
 
 		for (cit = v.cbegin(); cit != v.cend(); cit++)
 			std::cout << *cit << std::endl;
 
 		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
+
+		std::cout << "reverse_iterator" << std::endl;
+
+		ft::vector<int>::reverse_iterator rit;
+
+		for (rit = v.rbegin() + 1; rit != (v.rend() + 1); rit++)
+			std::cout << *rit << std::endl;
 	}
 
 	{

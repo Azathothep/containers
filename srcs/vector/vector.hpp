@@ -5,6 +5,7 @@
 
 #include <memory>
 #include "../std/iterator_traits.hpp"
+#include "../std/reverse_iterator.hpp"
 
 namespace ft
 {
@@ -45,7 +46,7 @@ namespace ft
 		public:
 			_vector_iterator() {}
 			_vector_iterator(pointer __p) : _m_ptr(__p) {}
-			_vector_iterator(const _vector_iterator &rhs) {}
+			_vector_iterator(const _vector_iterator &rhs): _m_ptr(rhs._m_ptr) {}
 
 			reference operator*() const
 			{
@@ -57,7 +58,7 @@ namespace ft
 			_vector_iterator operator+(difference_type n) const
 			{
 				_vector_iterator result(_m_ptr + n);
-				return *result;
+				return result;
 			}
 
 			_vector_iterator &operator++()
@@ -82,7 +83,7 @@ namespace ft
 			_vector_iterator operator-(difference_type n) const
 			{
 				_vector_iterator result(_m_ptr - n);
-				return *result;
+				return result;
 			}
 
 			_vector_iterator &operator--()
@@ -169,7 +170,7 @@ namespace ft
 
 		typedef _vector_iterator<vector<T>, false > 					iterator;
 		typedef _vector_iterator< vector<T>, true > 					const_iterator;
-		// typedef typename reverse_iterator<iterator> 					reverse_iterator;
+		typedef reverse_iterator<iterator> 								reverse_iterator;
 		// typedef typename reverse_iterator<const_iterator> 			const_reverse_iterator;
 		typedef typename iterator_traits<iterator>::difference_type 	difference_type;
 		typedef typename allocator_type::size_type 						size_type; // not sure if it's right
@@ -470,9 +471,9 @@ namespace ft
 		const_iterator cbegin() const { return const_iterator(this->_M_data._M_start); }
 		iterator end() const { return iterator(this->_M_data._M_finish); }
 		const_iterator cend() const { return const_iterator(this->_M_data._M_finish); }
-		// reverse_iterator rbegin();
+		reverse_iterator rbegin() const { return reverse_iterator(end()); }
 		// const_reverse_iterator crbegin() const;
-		// reverse_iterator rend();
+		reverse_iterator rend() const { return reverse_iterator(begin()); }
 		// const_reverse_iterator crend() const;
 
 		/* #endregion */
