@@ -252,10 +252,86 @@ namespace ft
 			Debug::Log << "Vector: operator= Called" << std::endl;
 		}
 
+		// #capacity
+
+		size_type size() const {
+			return size_type(end() - begin());
+		}
+
+		size_type max_size() const {
+			return _M_alloc.max_size();
+		}
+
+		void	resize(size_type n, value_type val = value_type()) { 
+			if (n < this->size())
+			{
+				this->shrink_to_fit();
+				return;
+			}
+
+			if (n <= this->capacity())
+			{
+				int _to_fill = this->size() - n;
+				this->__fill(_M_data->_M_finish, _to_fill, val);
+				return;
+			} else {
+				this->_realloc_insert(_M_data->_M_finish, n, val);
+			}
+		}
+
+		size_type capacity() const {
+			return size_type(iterator(this->_M_data._M_end_addr()) - begin());
+		}
+
+		bool empty() const {
+			Debug::Log << "Vector: empty()" << std::endl;
+			return (this->size() == 0);
+		}
+
+		void reserve(size_type __n) // throwing exception!
+		{
+			//if (__n > max_size())
+				//_throw_length_error(__N("vector::reserve"));
+
+			//if (capacity() < __n)
+				//_M_reallocate(__n);
+		}
+
+		void shrink_to_fit() { }
+
+		// # element access
+
 		reference operator[](size_type n) {
 			Debug::Log << "Vector: operator[" << n << "]" << std::endl;
 			return *(this->_M_data._M_start + n);
 		}
+
+		reference at(size_type n) { }
+
+		const_reference at (size_type n) const { }
+
+		reference front()
+		{
+			_requires_nonempty();
+			return *begin();
+		}
+
+		reference back()
+		{
+			Debug::Log << "Vector: back()"<< std::endl;
+			return *(end() - 1);
+		}
+
+		value_type* data() { }
+
+		const value_type* data() const { }
+
+		// # modifiers
+
+		template <class InputIterator>
+		void assign(InputIterator first, InputIterator last) { }
+
+		void assign(size_type n, const value_type& val) { }
 
 		void push_back(const value_type &__x)
 		{
@@ -288,43 +364,32 @@ namespace ft
 			// _Alloc_traits::destroy(this->_M_data, this->_M_data._M_finish);
 			// shrink size by 1
 		}
+	
+		iterator insert(iterator position, const value_type& val) { }
 
-		reference front()
-		{
-			_requires_nonempty();
-			return *begin();
-		}
+		void insert(iterator position, size_type n, const value_type& val) { }
 
-		reference back()
-		{
-			Debug::Log << "Vector: back()"<< std::endl;
-			return *(end() - 1);
-		}
+		template <class InputIterator>
+		void insert(iterator position, InputIterator first, InputIterator last) { }
 
-		bool empty() const {
-			Debug::Log << "Vector: empty()" << std::endl;
-			return (this->size() == 0);
-		}
+		iterator erase(iterator position) { }
 
-		size_type size() const {
-			return size_type(end() - begin());
-		}
+		iterator erase(iterator first, iterator last) { }
 
-		size_type capacity() const {
-			return size_type(iterator(this->_M_data._M_end_addr()) - begin());
-		}
+		void swap(vector& x);
 
-		void reserve(size_type __n) // throwing exception!
-		{
-			//if (__n > max_size())
-				//_throw_length_error(__N("vector::reserve"));
+		void clear() { }
 
-			//if (capacity() < __n)
-				//_M_reallocate(__n);
-		}
+		template <class... Args>
+		iterator emplace(const_iterator position, Args&&... args) { }
 
-		size_type max_size() const {
-			return _M_alloc.max_size();
+		template <class... Args>
+		void emplace_back(Args&&... args) { }
+
+		// # allocator
+
+		allocator_type get_allocator() const {
+			return this->_M_alloc;
 		}
 
 		/* #endregion */
@@ -335,6 +400,9 @@ namespace ft
 		void _fill(pointer __start, size_t __n, value_type __val)
 		{
 			Debug::Log << "Vector: Filling " << __n << " elements" << std::endl;
+
+			if (__n == 0)
+				return;
 
 			iterator it;
 			iterator ite = iterator(__start + __n);
@@ -363,9 +431,8 @@ namespace ft
 			this->_M_data._M_end_of_storage = this->_M_data._M_start + __n;
 		}
 
-		void _realloc_insert(iterator __position, value_type val)
-		{
-			Debug::Log << "Vector: realloc_inserting value " << val << " at position " << &(*__position) << std::endl;
+		void _realloc_insert(iterator __position, value_type __val, size_type __N = 1) {
+			Debug::Log << "Vector: realloc_inserting " << __N << " values " << val << " at position " << &(*__position) << std::endl;
 
 			pointer __old_start = this->_M_data._M_start;
 			pointer __old_finish = this->_M_data._M_finish;
@@ -376,18 +443,18 @@ namespace ft
 			try
 			{
 				// allocate memory & copy original vector to the new one
-				size_type _new_capacity = (this->capacity() == 0 ? 5 : this->capacity() * 2);
+				size_type _new_capacity = this->capacity() + __N;
 
 				this->__create_storage(_new_capacity);
 
 				this->_range_copy(__old_start, _M_data._M_start, __elems_before);
 
 				pointer __insert_position = _M_data._M_start + __elems_before;
-				*__insert_position = val;
+				__fill(__insert_position, __N, __val);
 
-				this->_range_copy(__old_start + __elems_before, __insert_position + 1, __elems_after);
+				this->_range_copy(__old_start + __elems_before, __insert_position + __N, __elems_after);
 
-				__NOTIFY_GROWTH(__elems_before + __elems_after + 1);
+				__NOTIFY_GROWTH(__elems_before + __elems_after + __N);
 			}
 			catch (std::exception &e)
 			{
@@ -464,7 +531,7 @@ namespace ft
 
 		/* #endregion */
 
-		/* #region iterators  */
+		/* #region iterators */
 
 	public:
 		iterator begin() const { return iterator(this->_M_data._M_start); }
