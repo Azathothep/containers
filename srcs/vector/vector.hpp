@@ -478,8 +478,6 @@ namespace ft
 
 		void clear() { }
 
-		// # allocator
-
 		allocator_type get_allocator() const {
 			return this->_M_alloc;
 		}
@@ -528,6 +526,7 @@ namespace ft
 		void _realloc(size_type new_capacity) {
 			pointer old_start = this->_M_data._M_start;
 			pointer old_finish = this->_M_data._M_finish;
+			size_type	old_capacity = this->capacity();
 
 			const size_type old_size = this->size();
 
@@ -537,34 +536,9 @@ namespace ft
 
 			this->_M_data._M_finish = this->_M_data._M_start + old_size;
 
-			this->_destroy_and_deallocate(old_start, old_finish);
-		}
+			this->_destroy(old_start, old_finish);
 
-		void _realloc_insert(pointer position, value_type val, size_type N = 1) {
-			Debug::Log << "Vector: realloc_inserting " << N << " values " << val << " at position " << position << std::endl;
-
-			pointer old_start = this->_M_data._M_start;
-			pointer old_finish = this->_M_data._M_finish;
-
-			const size_type elems_before = position - this->_M_data._M_start;
-			const size_type elems_after = this->_M_data._M_finish - position;
-
-			// allocate memory & copy original vector to the new one
-			size_type new_capacity = this->capacity() + N;
-
-			this->_create_storage(new_capacity);
-
-			this->_range_copy(old_start, this->_M_data._M_start, elems_before);
-
-			pointer insert_position = this->_M_data._M_start + elems_before;
-
-			this->_fill(insert_position, val, N);
-
-			this->_range_copy(old_start + elems_before, insert_position + N, elems_after);
-
-			this->_M_data._M_finish = elems_before + N + elems_after;
-
-			this->_destroy_and_deallocate(old_start, old_finish);
+			this->_M_alloc.deallocate(old_start, old_capacity);
 		}
 
 		void _range_copy(pointer _src, pointer _dest, size_type _size)
@@ -574,7 +548,7 @@ namespace ft
 			pointer p_src = _src;
 			pointer p_dest = _dest;
 
-			// Move pointers, don't copy the object !
+			// This moves pointers, it doesn't copy the object !
 			for (size_type i = 0; i < _size; i++)
 			{
 				Debug::Log << "Copying value from " << p_src << " to " << p_dest << std::endl;
@@ -592,31 +566,6 @@ namespace ft
 			for (p = start; p < end; p++) {
 				this->_M_alloc.destroy(p);
 			}
-		}
-
-		void _destroy_and_deallocate(pointer __start, pointer __end)
-		{
-			this->_destroy(__start, __end);
-
-			size_type __n = __end - __start;
-
-			Debug::Log << "Vector: Deallocating..." << std::endl;
-			_M_alloc.deallocate(__start, __n);
-		}
-
-		void _shrink_by(size_type __n)
-		{
-			Debug::Log << "Vector: Shrinking memory by " << __n << std::endl;
-			pointer __new_finish = _M_data._M_finish - __n;
-
-			if (__n > this->size())
-				__new_finish = _M_data._M_start;
-
-			pointer __p;
-			pointer __end = this->_M_data._M_finish;
-
-			for (__p = __new_finish; __p < __end; __p++)
-				this->_M_alloc.destroy(__p);
 		}
 
 		/* #endregion */
