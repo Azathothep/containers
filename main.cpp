@@ -26,12 +26,18 @@ int main(int argc, char **argv) {
 		v.push_back(6);
 		v.push_back(7);
 
+		//v.resize(16);
+
 		std::cout << "const_iterator" << std::endl;
 
 		ft::vector<int>::const_iterator cit;
 
+		int i = 0;
 		for (cit = v.cbegin(); cit != v.cend(); cit++)
-			std::cout << *cit << std::endl;
+		{
+			std::cout << "[" << i << "]: " << *cit << std::endl;
+			i++;
+		}
 
 		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
 
