@@ -433,12 +433,8 @@ namespace ft
 		{
 			Debug::Log << "Vector: push_back()" << std::endl;
 
-			if (this->_M_data._M_finish < this->_M_data._M_end_of_storage) {
-				Debug::Log << "Vector: adding value to vector" << std::endl;
-				this->_construct(this->_M_data._M_finish, __x);
-				this->_M_data._M_finish += 1;
-			}
-			else {
+			if (this->_M_data._M_finish >= this->_M_data._M_end_of_storage)
+			{
 				Debug::Log << "Vector: size insufficient, reallocating..." << std::endl;
 
 				size_type new_capacity = this->capacity() * 2;
@@ -446,9 +442,11 @@ namespace ft
 					new_capacity = BASE_CAPACITY;
 
 				this->_realloc(new_capacity);
-
-				this->push_back(__x);
 			}
+
+			Debug::Log << "Vector: adding value to vector" << std::endl;
+			this->_construct(this->_M_data._M_finish, __x);
+			this->_M_data._M_finish += 1;
 		}
 
 		void pop_back()
