@@ -239,12 +239,9 @@ namespace ft
 		{
 			Debug::Log << "Vector: Destructor Called" << std::endl;
 			
-			iterator it;
-			
-			for (it = begin(); it != end(); it++)
-				_M_alloc.destroy(&(*it));
+			this->clear();
 
-			_M_alloc.deallocate(_M_data._M_start, this->capacity());
+			this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
 		}
 
 		vector &operator=(const vector &x)
@@ -254,7 +251,9 @@ namespace ft
 
 			this->_create_storage(x.capacity());
 
+			this->_range_copy(x._M_data._M_start, this->_M_data._M_start, x.size());
 
+			this->_M_data._M_finish = x.size();
 		}
 
 		/* #endregion */
@@ -389,14 +388,12 @@ namespace ft
 		// # modifiers
 
 		void _clean_sized(size_type n) {
-			if (n <= this->capacity()) {
-				this->_destroy(this->_M_data._M_start, this->_M_data._M_finish);
-			} else {
+			this->clean();
+			
+			if (n > this->capacity()) {
 				size_type new_capacity = n * 2;
 				if (new_capacity == 0)
 					new_capacity = BASE_CAPACITY;
-
-				this->_destroy(this->_M_data._M_start, this->_M_data._M_finish);
 
 				this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
 
@@ -461,20 +458,191 @@ namespace ft
 			this->_M_data._M_finish -= 1;
 		}
 	
-		iterator insert(iterator position, const value_type& val) { }
+		iterator insert(iterator position, const value_type& val) {
+			Debug::Log << "Vector: single insert" << std::endl;
 
-		void insert(iterator position, size_type n, const value_type& val) { }
+			size_type target_size = this->size() + 1;
+			size_type elems_before = position - this->begin();
+			size_type elems_after = this->size() - elems_before;
+
+			if (target_size <= this->capacity()) {
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+				this->_range_copy(insert_pos, insert_pos + 1, elems_after);
+				this->_construct(insert_pos, val);
+				this->_M_data._M_finish += 1;
+				return position;
+			}
+			else {
+				pointer old_start = this->_M_data._M_start;
+				pointer old_finish = this->_M_data._M_finish;
+				size_type old_capacity = this->capacity();
+
+				size_type new_capacity = old_capacity * 2;
+				if (new_capacity == 0)
+					new_capacity = BASE_CAPACITY;
+
+				this->_create_storage(new_capacity);
+
+				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+
+				this->_construct(insert_pos, val);
+
+				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + 1, elems_after);
+
+				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + 1;
+
+				this->_destroy(old_start, old_finish);
+
+				this->_M_alloc.deallocate(old_start, old_capacity);
+
+				return (iterator(insert_pos));			
+			}
+		}
+
+		void insert(iterator position, size_type n, const value_type& val) {
+			Debug::Log << "Vector: Multiple insert of size " << n << std::endl;
+
+			size_type target_size = this->size() + n;
+			size_type elems_before = position - this->begin();
+			size_type elems_after = this->size() - elems_before;
+
+			if (target_size <= this->capacity()) {
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+				this->_range_copy(insert_pos, insert_pos + n, elems_after);
+
+				for (int i = 0; i < n; i++)
+					this->_construct(insert_pos + i, val);
+				
+				this->_M_data._M_finish += n;
+			}
+			else {
+				pointer old_start = this->_M_data._M_start;
+				pointer old_finish = this->_M_data._M_finish;
+				size_type old_capacity = this->capacity();
+
+				// estimate new capacity
+				size_type new_capacity = target_size * 2;
+
+				this->_create_storage(new_capacity);
+
+				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+
+				for (int i = 0; i < n; i++)
+					this->_construct(insert_pos + i, val);
+
+				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
+
+				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
+
+				this->_destroy(old_start, old_finish);
+
+				this->_M_alloc.deallocate(old_start, old_capacity);		
+			}
+		}
 
 		template <class InputIterator>
-		void insert(iterator position, InputIterator first, InputIterator last) { }
+		void insert(iterator position, InputIterator first, InputIterator last) {
+			Debug::Log << "Vector: Iterator insert of size " << last - first << std::endl;
 
-		iterator erase(iterator position) { }
+			size_type n = last - first;
+			size_type target_size = this->size() + n;
+			size_type elems_before = position - this->begin();
+			size_type elems_after = this->size() - elems_before;
 
-		iterator erase(iterator first, iterator last) { }
+			if (target_size <= this->capacity()) {
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+				this->_range_copy(insert_pos, insert_pos + n, elems_after);
 
-		void swap(vector& x);
+				for (int i = 0; i < n; i++)
+					this->_construct(insert_pos + i, *(first + i));
+				
+				this->_M_data._M_finish += n;
+			}
+			else {
+				pointer old_start = this->_M_data._M_start;
+				pointer old_finish = this->_M_data._M_finish;
+				size_type old_capacity = this->capacity();
 
-		void clear() { }
+				// estimate new capacity
+				size_type new_capacity = target_size * 2;
+
+				this->_create_storage(new_capacity);
+
+				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+
+				for (int i = 0; i < n; i++)
+					this->_construct(insert_pos + i, *(first + i));
+
+				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
+
+				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
+
+				this->_destroy(old_start, old_finish);
+
+				this->_M_alloc.deallocate(old_start, old_capacity);		
+			}
+		}
+
+		// ERASE PARTIALLY WORKING - check the proper construction / destruction of elements
+		iterator erase(iterator position) {
+			Debug::Log << "Vector: single erase" << std::endl;
+
+			pointer erase_pos = &(*position);
+			size_type elems_after = erase_pos - this->_M_data._M_start;
+
+			this->_M_alloc.destroy(erase_pos);
+			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
+			this->_range_copy(erase_pos + 1, erase_pos, elems_after);
+			this->_M_data._M_finish -= 1;
+
+			return (position);
+		}
+
+		iterator erase(iterator first, iterator last) {
+			Debug::Log << "Vector: multiple erase of size " << last - first << std::endl;
+
+			pointer erase_pos = &(*first);
+			size_type n = last - first;
+			size_type elems_after = erase_pos + n - this->_M_data._M_start;
+
+			for (int i = 0; i < n; i++)
+				this->_M_alloc.destroy(erase_pos + i);
+
+			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
+			this->_range_copy(erase_pos + n, erase_pos, elems_after);
+			this->_M_data._M_finish -= n;
+
+			return (iterator(this->_M_data._M_start + n));
+		}
+
+		void swap(vector& x) {
+			Debug::Log << "Vector: swapping" << std::endl;
+
+			pointer xStart = x._M_data._M_start;
+			pointer xFinish = x._M_data._M_finish;
+			pointer xEndOfStorage = x._M_data._M_end_of_storage;
+
+			x._M_data._M_start = this->_M_data._M_start;
+			x._M_data._M_finish = this->_M_data._M_finish;
+			x._M_data._M_end_of_storage = this->_M_data._M_end_of_storage;
+
+			this->_M_data._M_start = xStart;
+			this->_M_data._M_finish = xFinish;
+			this->_M_data._M_end_of_storage = xEndOfStorage;
+		};
+
+		void clear() {
+			Debug::Log << "Vector: clean" << std::endl;
+
+			this->_destroy(this->_M_data._M_start, this->_M_data._M_finish);
+			this->_M_data._M_finish = this->_M_data._M_start;
+		}
 
 		allocator_type get_allocator() const {
 			return this->_M_alloc;
@@ -542,22 +710,40 @@ namespace ft
 		void _range_copy(pointer _src, pointer _dest, size_type _size)
 		{
 			Debug::Log << "Vector: Range copy of size " << _size << std::endl;
-
-			pointer p_src = _src;
-			pointer p_dest = _dest;
-
-			// This moves pointers, it doesn't copy the object !
-			for (size_type i = 0; i < _size; i++)
+			
+			// Checking if range overlaps
+			if (_src < _dest && (_src + _size > _dest))
 			{
-				Debug::Log << "Copying value from " << p_src << " to " << p_dest << std::endl;
-				*p_dest = *p_src;
-				p_src++;
-				p_dest++;
+				pointer p_src = _src + _size - 1;
+				pointer p_dest = _dest + _size - 1;
+
+				// This moves pointers, it doesn't copy the object !
+				for (size_type i = 0; i < _size; i++)
+				{
+					Debug::Log << "Copying value from " << p_src << " to " << p_dest << std::endl;
+					*p_dest = *p_src;
+					p_src--;
+					p_dest--;
+				}
 			}
+			else {
+				pointer p_src = _src;
+				pointer p_dest = _dest;
+
+				// This moves pointers, it doesn't copy the object !
+				for (size_type i = 0; i < _size; i++)
+				{
+					Debug::Log << "Copying value from " << p_src << " to " << p_dest << std::endl;
+					*p_dest = *p_src;
+					p_src++;
+					p_dest++;
+				}
+			}
+			
 		}
 
 		void _destroy(pointer start, pointer end) {
-			Debug::Log << "Vector: Destroying" << (end - start) << " elements" << std::endl;
+			Debug::Log << "Vector: Destroying " << (end - start) << " elements" << std::endl;
 			
 			pointer p;
 

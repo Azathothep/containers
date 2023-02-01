@@ -26,7 +26,9 @@ int main(int argc, char **argv) {
 		v.push_back(6);
 		v.push_back(7);
 
-		//v.resize(16);
+		ft::vector<int> v2;
+
+		v.erase(v.begin() + 2, v.begin() + 4);
 
 		std::cout << "const_iterator" << std::endl;
 
