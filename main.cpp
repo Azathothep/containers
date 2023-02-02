@@ -1,10 +1,12 @@
-#include "srcs/vector/vector.hpp"
-#include "srcs/std/reverse_iterator.hpp"
-#include "srcs/std/iterator_traits.hpp"
+#include "vector.hpp"
+#include "std/reverse_iterator.hpp"
+#include "std/iterator_traits.hpp"
 #include <vector>
 
 int main(int argc, char **argv) {
-	
+	argc += 0;
+	(void)argv;
+
 	std::ofstream log;
 	log.open("log.txt", std::ofstream::out | std::ofstream::trunc);
 	log.close();
@@ -35,7 +37,7 @@ int main(int argc, char **argv) {
 		ft::vector<int>::const_iterator cit;
 
 		int i = 0;
-		for (cit = v.cbegin(); cit != v.cend(); cit++)
+		for (cit = v.begin(); cit != v.end(); cit++)
 		{
 			std::cout << "[" << i << "]: " << *cit << std::endl;
 			i++;
@@ -45,9 +47,9 @@ int main(int argc, char **argv) {
 
 		std::cout << "reverse_iterator" << std::endl;
 
-		ft::vector<int>::reverse_iterator rit;
+		ft::vector<int>::const_reverse_iterator rit;
 
-		for (rit = v.rbegin(); rit != v.rend(); rit++)
+		for (rit = v.crbegin(); rit != v.crend(); rit++)
 			std::cout << *rit << std::endl;
 	}
 

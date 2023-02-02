@@ -1,12 +1,12 @@
-#include "../../Debug.hpp"
+#include "Debug.hpp"
 
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
 #include <memory>
 #include <stdexcept>
-#include "../std/iterator_traits.hpp"
-#include "../std/reverse_iterator.hpp"
+#include "std/iterator_traits.hpp"
+#include "std/reverse_iterator.hpp"
 
 namespace ft
 {
@@ -17,29 +17,16 @@ namespace ft
 
 		/* #region iterators */
 
-		template <bool flag, class IsTrue, class IsFalse>
-		struct choose;
-
-		template <class IsTrue, class IsFalse>
-		struct choose<true, IsTrue, IsFalse> {
-			typedef IsTrue type;
-		};
-
-		template <class IsTrue, class IsFalse>
-		struct choose <false, IsTrue, IsFalse> {
-			typedef IsFalse type;
-		};
-
-		template <typename vector, bool is_const>
+		template <typename value_t>
 		class _vector_iterator
 		{
 
 		public:
 			typedef typename std::forward_iterator_tag 									iterator_category;
 			typedef typename std::ptrdiff_t 											difference_type;
-			typedef typename vector::value_type 										value_type;
-			typedef typename choose<is_const, const value_type *, value_type *>::type 	pointer;
-			typedef typename choose<is_const, const value_type &, value_type &>::type 	reference;
+			typedef value_t																value_type;
+			typedef	value_t*														 	pointer;
+			typedef value_t&														 	reference;
 
 		private:
 			pointer _m_ptr;
@@ -169,11 +156,11 @@ namespace ft
 		typedef typename allocator_type::pointer 						pointer;
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
-		typedef _vector_iterator<vector<T>, false > 					iterator;
-		typedef _vector_iterator<vector<T>, true > 						const_iterator;
-		typedef reverse_iterator<iterator> 								reverse_iterator;
-		// typedef typename reverse_iterator<const_iterator> 			const_reverse_iterator;
-		typedef typename iterator_traits<iterator>::difference_type 	difference_type;
+		typedef _vector_iterator<T> 									iterator;
+		typedef _vector_iterator<const T>		 						const_iterator;
+		typedef ft::reverse_iterator<iterator> 							reverse_iterator;
+		typedef ft::reverse_iterator<const_iterator> 					const_reverse_iterator;
+		typedef typename ft::iterator_traits<iterator>::difference_type 	difference_type;
 		typedef typename allocator_type::size_type 						size_type; // not sure if it's right
 
 		/* #endregion */
@@ -227,6 +214,10 @@ namespace ft
 		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type())
 		{
 			Debug::Log << "Vector: Iterator Constructor Called" << std::endl;
+
+			this->_M_alloc = alloc;
+
+			this->assign(first, last);
 		}
 
 		vector(const vector &x)
@@ -265,9 +256,9 @@ namespace ft
 		iterator end() const { return iterator(this->_M_data._M_finish); }
 		const_iterator cend() const { return const_iterator(this->_M_data._M_finish); }
 		reverse_iterator rbegin() const { return reverse_iterator(end()); }
-		// const_reverse_iterator crbegin() const;
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(cend()); };
 		reverse_iterator rend() const { return reverse_iterator(begin()); }
-		// const_reverse_iterator crend() const;
+		const_reverse_iterator crend() const { return const_reverse_iterator(cbegin()); };
 
 		/* #endregion */
 
@@ -388,7 +379,7 @@ namespace ft
 		// # modifiers
 
 		void _clean_sized(size_type n) {
-			this->clean();
+			this->clear();
 			
 			if (n > this->capacity()) {
 				size_type new_capacity = n * 2;
@@ -611,7 +602,7 @@ namespace ft
 			size_type n = last - first;
 			size_type elems_after = erase_pos + n - this->_M_data._M_start;
 
-			for (int i = 0; i < n; i++)
+			for (int i = 0; i < (int)n; i++)
 				this->_M_alloc.destroy(erase_pos + i);
 
 			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
