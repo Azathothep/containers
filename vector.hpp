@@ -10,144 +10,166 @@
 
 namespace ft
 {
+	template <typename T, bool constness>
+	struct is_const;
+
+	template <typename T>
+	struct is_const<T, false> {
+		typedef T type;
+	};
+
+	template <typename T>
+	struct is_const<T, true> {
+		typedef const T type;
+	};
+
+	/* #region iterators */
+
+	template <typename value_t, bool constness = false>
+	class vector_iterator
+	{
+
+	public:
+		typedef typename std::forward_iterator_tag 									iterator_category;
+		typedef typename std::ptrdiff_t 											difference_type;
+		typedef typename is_const<value_t, constness>::type							value_type;
+		typedef	value_type*														 	pointer;
+		typedef value_type&														 	reference;
+
+	private:
+		pointer _m_ptr;
+
+	public:
+		vector_iterator() {}
+		vector_iterator(pointer __p) : _m_ptr(__p) {}
+		vector_iterator(const vector_iterator &rhs) : _m_ptr(rhs._m_ptr) {}
+
+		vector_iterator &operator=(const vector_iterator<value_t, false> &rhs) {
+			this->_m_ptr = &(*rhs);
+			return *this;
+		}
+
+		~vector_iterator() {}
+
+		reference operator*() const { return *_m_ptr; }
+
+		/* #region operators */
+
+		vector_iterator operator+(difference_type n) const
+{
+			vector_iterator result(_m_ptr + n);
+			return result;
+		}
+
+		vector_iterator &operator++()
+		{
+			_m_ptr++;
+			return *this;
+		}
+
+		vector_iterator operator++(int)
+		{
+			vector_iterator iterator = *this;
+			++(*this);
+			return iterator;
+		}
+
+		vector_iterator &operator+=(difference_type n)
+		{
+			_m_ptr += n;
+			return *this;
+		}
+
+		vector_iterator operator-(difference_type n) const
+		{
+			vector_iterator result(_m_ptr - n);
+			return result;
+		}
+
+		vector_iterator &operator--()
+		{
+			_m_ptr--;
+			return *this;
+		}
+
+		vector_iterator operator--(int)
+		{
+			vector_iterator iterator = *this;
+			--(*this);
+			return iterator;
+		}
+
+		vector_iterator &operator-=(difference_type n)
+		{
+			_m_ptr -= n;
+			return *this;
+		}
+
+		pointer operator->() const
+		{
+			return _m_ptr;
+		}
+
+		reference operator[](int index) const
+		{
+			return *(_m_ptr + index);
+		}
+
+		bool operator==(const vector_iterator &rhs) const
+		{
+			return _m_ptr == rhs._m_ptr;
+		}
+
+		bool operator!=(const vector_iterator &rhs) const
+		{
+			return !(*this == rhs);
+		}
+
+		bool operator<(const vector_iterator &rhs) const
+		{
+			return _m_ptr < rhs._m_ptr;
+		}
+
+		bool operator<=(const vector_iterator &rhs) const
+		{
+			return !(*this > rhs);
+		}
+
+		bool operator>(const vector_iterator &rhs) const
+		{
+			return _m_ptr > rhs._m_ptr;
+		}
+
+		bool operator>=(const vector_iterator &rhs) const
+		{
+			return !(*this < rhs);
+		}
+
+		difference_type operator-(const vector_iterator &rhs) const
+		{
+			return _m_ptr - rhs._m_ptr;
+		}
+
+		// operator+ (difference_type& lhs, const vector_iterator& rhs)
+
+		/* #endregion */
+	};
+
+    template<typename T_L, typename T_R>
+    typename ft::vector_iterator<T_L>::difference_type
+    operator!=(const ft::vector_iterator<T_L, true> lhs,
+              const ft::vector_iterator<T_R> rhs)
+    {
+        return (&(*lhs) != &(*rhs));
+    }
+
+	/* #endregion */
 
 	template <class T, class Alloc = std::allocator<T> >
 	class vector
 	{
 
-		/* #region iterators */
-
-		template <typename value_t>
-		class vector_iterator
-		{
-
-		public:
-			typedef typename std::forward_iterator_tag 									iterator_category;
-			typedef typename std::ptrdiff_t 											difference_type;
-			typedef value_t																value_type;
-			typedef	value_t*														 	pointer;
-			typedef value_t&														 	reference;
-
-		private:
-			pointer _m_ptr;
-
-		public:
-			vector_iterator() {}
-			vector_iterator(pointer __p) : _m_ptr(__p) {}
-			vector_iterator(vector_iterator const &rhs) { *this = rhs; }
-
-			vector_iterator &operator=(vector_iterator const &rhs) {
-				this->_m_ptr = rhs._m_ptr;
-				return *this;
-			}
-
-			~vector_iterator() {}
-
-			reference operator*() const { return *_m_ptr; }
-
-			/* #region operators */
-
-			vector_iterator operator+(difference_type n) const
-{
-				vector_iterator result(_m_ptr + n);
-				return result;
-			}
-
-			vector_iterator &operator++()
-			{
-				_m_ptr++;
-				return *this;
-			}
-
-			vector_iterator operator++(int)
-			{
-				vector_iterator iterator = *this;
-				++(*this);
-				return iterator;
-			}
-
-			vector_iterator &operator+=(difference_type n)
-			{
-				_m_ptr += n;
-				return *this;
-			}
-
-			vector_iterator operator-(difference_type n) const
-			{
-				vector_iterator result(_m_ptr - n);
-				return result;
-			}
-
-			vector_iterator &operator--()
-			{
-				_m_ptr--;
-				return *this;
-			}
-
-			vector_iterator operator--(int)
-			{
-				vector_iterator iterator = *this;
-				--(*this);
-				return iterator;
-			}
-
-			vector_iterator &operator-=(difference_type n)
-			{
-				_m_ptr -= n;
-				return *this;
-			}
-
-			pointer operator->() const
-			{
-				return _m_ptr;
-			}
-
-			reference operator[](int index) const
-			{
-				return *(_m_ptr + index);
-			}
-
-			bool operator==(const vector_iterator &rhs) const
-			{
-				return _m_ptr == rhs._m_ptr;
-			}
-
-			bool operator!=(const vector_iterator &rhs) const
-			{
-				return !(*this == rhs);
-			}
-
-			bool operator<(const vector_iterator &rhs) const
-			{
-				return _m_ptr < rhs._m_ptr;
-			}
-
-			bool operator<=(const vector_iterator &rhs) const
-			{
-				return !(*this > rhs);
-			}
-
-			bool operator>(const vector_iterator &rhs) const
-			{
-				return _m_ptr > rhs._m_ptr;
-			}
-
-			bool operator>=(const vector_iterator &rhs) const
-			{
-				return !(*this < rhs);
-			}
-
-			difference_type operator-(const vector_iterator &rhs) const
-			{
-				return _m_ptr - rhs._m_ptr;
-			}
-
-			// operator+ (difference_type& lhs, const vector_iterator& rhs)
-
-			/* #endregion */
-		};
-
-		/* #endregion */
+		
 
 		/* #region types definition */
 
@@ -161,7 +183,7 @@ namespace ft
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
 		typedef vector_iterator<T> 											iterator;
-		typedef vector_iterator<const T>		 							const_iterator;
+		typedef vector_iterator<T, true>		 							const_iterator;
 		typedef ft::reverse_iterator<iterator> 								reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator> 						const_reverse_iterator;
 		typedef typename ft::iterator_traits<iterator>::difference_type 	difference_type;
@@ -248,7 +270,7 @@ namespace ft
 
 			this->_range_copy(x._M_data._M_start, this->_M_data._M_start, x.size());
 
-			this->_M_data._M_finish = x.size();
+			this->_M_data._M_finish = this->_M_data._M_start + x.size();
 		}
 
 		/* #endregion */
