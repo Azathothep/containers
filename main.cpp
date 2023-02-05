@@ -18,6 +18,8 @@ int main(int argc, char **argv) {
 
 		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
 
+		v.assign(5, 10);
+
 		v.push_back(0);
 		v.push_back(1);
 		v.push_back(2);

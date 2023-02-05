@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include "std/iterator_traits.hpp"
 #include "std/reverse_iterator.hpp"
+#include "std/enable_if.hpp"
+#include "std/is_integral.hpp"
+#include <stdlib.h>
 
 namespace ft
 {
@@ -42,7 +45,12 @@ namespace ft
 	public:
 		vector_iterator() {}
 		vector_iterator(pointer __p) : _m_ptr(__p) {}
-		vector_iterator(const vector_iterator &rhs) : _m_ptr(rhs._m_ptr) {}
+		vector_iterator(const vector_iterator<value_t, false> &rhs) : _m_ptr(&(*rhs)) {}
+
+		vector_iterator &operator=(const vector_iterator<value_t, true> &rhs) {
+			this->_m_ptr = &(*rhs);
+			return *this;
+		}
 
 		vector_iterator &operator=(const vector_iterator<value_t, false> &rhs) {
 			this->_m_ptr = &(*rhs);
@@ -168,9 +176,6 @@ namespace ft
 	template <class T, class Alloc = std::allocator<T> >
 	class vector
 	{
-
-		
-
 		/* #region types definition */
 
 	public:
@@ -233,11 +238,11 @@ namespace ft
 
 			this->_create_storage(n * 2);
 			this->_fill(this->_M_data._M_start, val, n);
-			__NOTIFY_GROWTH(n);
+			this->_M_data._M_finish += n;
 		}
 
 		template <class InputIterator>
-		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type())
+		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL)
 		{
 			Debug::Log << "Vector: Iterator Constructor Called" << std::endl;
 
@@ -271,6 +276,8 @@ namespace ft
 			this->_range_copy(x._M_data._M_start, this->_M_data._M_start, x.size());
 
 			this->_M_data._M_finish = this->_M_data._M_start + x.size();
+
+			return *this;
 		}
 
 		/* #endregion */
@@ -299,7 +306,9 @@ namespace ft
 		}
 
 		void	resize(size_type n, value_type val = value_type()) { 
-			if (n == this->size())
+			size_type size = this->size();
+			
+			if (n == size)
 				return;
 			
 			if (n < this->size())
@@ -317,9 +326,9 @@ namespace ft
 
 				this->_M_data._M_finish = __new_finish;
 			} else {
-				size_type _to_fill = n - this->size();
+				size_type remaining = n - size;
 
-				for (int i = 0; i < n; i++)
+				for (int i = 0; i < (int)remaining; i++)
 					this->push_back(val);
 			}
 		}
@@ -363,37 +372,37 @@ namespace ft
 
 		const_reference operator[](size_type n) const {
 			Debug::Log << "Vector: const operator[" << n << "]" << std::endl;
-			return const_reference((*this)[n]);
+			return const_reference(*(this->_M_data._M_start + n));
 		}
 
 		reference at(size_type n) {
 			if (n >= this->size())
-				throw new std::out_of_range("vector: at");
+				throw std::out_of_range("vector: at");
 			return (*this)[n];
 		}
 
 		const_reference at (size_type n) const {
 			if (n >= this->size())
-				throw new std::out_of_range("vector: at");
+				throw std::out_of_range("vector: at");
 			return (*this)[n];
 		 }
 
 		reference front() {
 			Debug::Log << "Vector: front()"<< std::endl;
-			return *(_M_data._M_start);
+			return *this->_M_data._M_start;
 		}
 
 		const_reference front() const {
-			return const_reference(this->front());
+			return const_reference(*this->_M_data._M_start);
 		}
 
 		reference back() {
 			Debug::Log << "Vector: back()"<< std::endl;
-			return *(_M_data._M_finish - 1);
+			return *(this->_M_data._M_finish - 1);
 		}
 
 		const_reference back() const {
-			return const_reference(this->back());
+			return const_reference(*(this->_M_data._M_finish - 1));
 		}
 
 		value_type* data() {
@@ -421,8 +430,8 @@ namespace ft
 		}
 
 		template <class InputIterator>
-		void assign(InputIterator first, InputIterator last) {
-			size_type n = last - first;
+		void assign(InputIterator first, InputIterator last, typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) {
+			size_type n = this->_distance(first, last);
 			
 			this->_clean_sized(n);
 			
@@ -531,7 +540,7 @@ namespace ft
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 				this->_range_copy(insert_pos, insert_pos + n, elems_after);
 
-				for (int i = 0; i < n; i++)
+				for (int i = 0; i < (int)n; i++)
 					this->_construct(insert_pos + i, val);
 				
 				this->_M_data._M_finish += n;
@@ -550,7 +559,7 @@ namespace ft
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
-				for (int i = 0; i < n; i++)
+				for (int i = 0; i < (int)n; i++)
 					this->_construct(insert_pos + i, val);
 
 				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
@@ -564,10 +573,10 @@ namespace ft
 		}
 
 		template <class InputIterator>
-		void insert(iterator position, InputIterator first, InputIterator last) {
-			Debug::Log << "Vector: Iterator insert of size " << last - first << std::endl;
+		void insert(iterator position, InputIterator first, InputIterator last, typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) {
+			Debug::Log << "Vector: Iterator insert of size " << this->_distance(first, last) << std::endl;
 
-			size_type n = last - first;
+			size_type n = this->_distance(first, last);
 			size_type target_size = this->size() + n;
 			size_type elems_before = position - this->begin();
 			size_type elems_after = this->size() - elems_before;
@@ -576,8 +585,11 @@ namespace ft
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 				this->_range_copy(insert_pos, insert_pos + n, elems_after);
 
-				for (int i = 0; i < n; i++)
-					this->_construct(insert_pos + i, *(first + i));
+				for (int i = 0; i < (int)n; i++)
+				{
+					value_type val = *(this->_add(first, i));
+					this->_construct(insert_pos + i, val);
+				}
 				
 				this->_M_data._M_finish += n;
 			}
@@ -595,8 +607,11 @@ namespace ft
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
-				for (int i = 0; i < n; i++)
-					this->_construct(insert_pos + i, *(first + i));
+				for (int i = 0; i < (int)n; i++)
+				{
+					value_type val = *(this->_add(first, i));
+					this->_construct(insert_pos + i, val);
+				}
 
 				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
 
@@ -624,11 +639,11 @@ namespace ft
 		}
 
 		iterator erase(iterator first, iterator last) {
-			Debug::Log << "Vector: multiple erase of size " << last - first << std::endl;
+			Debug::Log << "Vector: multiple erase of size " << this->_distance(first, last) << std::endl;
 
 			pointer erase_pos = &(*first);
-			size_type n = last - first;
-			size_type elems_after = erase_pos + n - this->_M_data._M_start;
+			size_type n = this->_distance(first, last);
+			size_type elems_after = erase_pos - this->_M_data._M_start + n;
 
 			for (int i = 0; i < (int)n; i++)
 				this->_M_alloc.destroy(erase_pos + i);
@@ -672,6 +687,25 @@ namespace ft
 		/* #region private methods */
 
 	private:
+
+		template <typename Iterator>
+		size_type _distance(Iterator first, Iterator last) {
+			size_type n = 0;
+
+			for (Iterator it = first; it != last; it++)
+				n++;
+
+			return n;
+		}
+
+		template <typename Iterator>
+		Iterator _add(Iterator it, size_type n) {
+			for (int i = 0; i < (int)n; i++)
+				it++;
+
+			return it;
+		}
+
 		void _fill(pointer __start, value_type __val, size_type __n)
 		{
 			Debug::Log << "Vector: Filling " << __n << " elements" << std::endl;
