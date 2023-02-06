@@ -257,12 +257,18 @@ namespace ft
 
 			this->_M_alloc = alloc;
 
-			size_type size = last - first;
+			size_type size = this->_distance(first, last);
 			
 			this->_create_storage(size * 2);
 
-			this->_range_copy(&(*first), this->_M_data._M_start, size);
+			InputIterator it = first;
+			pointer p = this->_M_data._M_start;
 
+			for (; it != last; it++) {
+				this->_M_alloc.construct(p, *it);
+				p++;
+			}
+			
 			this->_M_data._M_finish = this->_M_data._M_start + size;
 		}
 
@@ -641,7 +647,7 @@ namespace ft
 
 			this->_M_alloc.destroy(erase_pos);
 			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			memmove(erase_pos, erase_pos + 1, elems_after * sizeof(value_type))
+			memmove(erase_pos, erase_pos + 1, elems_after * sizeof(value_type));
 			this->_M_data._M_finish -= 1;
 
 			return (position);
@@ -658,7 +664,7 @@ namespace ft
 				this->_M_alloc.destroy(erase_pos + i);
 
 			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			memmove(erase_pos, erase_pos + n, elems_after * sizeof(value_type))
+			memmove(erase_pos, erase_pos + n, elems_after * sizeof(value_type));
 			this->_M_data._M_finish -= n;
 
 			return (iterator(this->_M_data._M_start + n));
