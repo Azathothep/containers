@@ -10,9 +10,12 @@
 #include "std/enable_if.hpp"
 #include "std/is_integral.hpp"
 #include <stdlib.h>
+#include <cstring>
 
 namespace ft
 {
+	#define IS_CONST true
+
 	template <typename T, bool constness>
 	struct is_const;
 
@@ -28,14 +31,14 @@ namespace ft
 
 	/* #region iterators */
 
-	template <typename value_t, bool constness = false>
+	template <typename T, bool constness = false>
 	class vector_iterator
 	{
 
 	public:
 		typedef typename std::forward_iterator_tag 									iterator_category;
 		typedef typename std::ptrdiff_t 											difference_type;
-		typedef typename is_const<value_t, constness>::type							value_type;
+		typedef typename is_const<T, constness>::type							value_type;
 		typedef	value_type*														 	pointer;
 		typedef value_type&														 	reference;
 
@@ -45,14 +48,12 @@ namespace ft
 	public:
 		vector_iterator() {}
 		vector_iterator(pointer __p) : _m_ptr(__p) {}
-		vector_iterator(const vector_iterator<value_t, false> &rhs) : _m_ptr(&(*rhs)) {}
 
-		vector_iterator &operator=(const vector_iterator<value_t, true> &rhs) {
-			this->_m_ptr = &(*rhs);
-			return *this;
-		}
+		template <bool c>
+		vector_iterator(const vector_iterator<T, c> &rhs) : _m_ptr(&(*rhs)) {}
 
-		vector_iterator &operator=(const vector_iterator<value_t, false> &rhs) {
+		template <bool c>
+		vector_iterator &operator=(const vector_iterator<T, c> &rhs) {
 			this->_m_ptr = &(*rhs);
 			return *this;
 		}
@@ -64,9 +65,13 @@ namespace ft
 		/* #region operators */
 
 		vector_iterator operator+(difference_type n) const
-{
+		{
 			vector_iterator result(_m_ptr + n);
 			return result;
+		}
+
+		reference operator[](difference_type n) const {
+			return *(*this + n);
 		}
 
 		vector_iterator &operator++()
@@ -118,58 +123,62 @@ namespace ft
 			return _m_ptr;
 		}
 
-		reference operator[](int index) const
+		template <bool c>
+		bool operator==(const vector_iterator<T, c> &rhs) const
 		{
-			return *(_m_ptr + index);
+			return &(**this) == &(*rhs);
 		}
 
-		bool operator==(const vector_iterator &rhs) const
-		{
-			return _m_ptr == rhs._m_ptr;
-		}
-
-		bool operator!=(const vector_iterator &rhs) const
+		template <bool c>
+		bool operator!=(const vector_iterator<T, c> &rhs) const
 		{
 			return !(*this == rhs);
 		}
 
-		bool operator<(const vector_iterator &rhs) const
+		template <bool c>
+		bool operator<(const vector_iterator<T, c> &rhs) const
 		{
-			return _m_ptr < rhs._m_ptr;
+			return &(**this) < &(*rhs);
 		}
 
-		bool operator<=(const vector_iterator &rhs) const
+		template <bool c>
+		bool operator<=(const vector_iterator<T, c> &rhs) const
 		{
 			return !(*this > rhs);
 		}
 
-		bool operator>(const vector_iterator &rhs) const
+		template <bool c>
+		bool operator>(const vector_iterator<T, c> &rhs) const
 		{
-			return _m_ptr > rhs._m_ptr;
+			return (!(*this < rhs) && (*this != rhs));
 		}
 
-		bool operator>=(const vector_iterator &rhs) const
+		template <bool c>
+		bool operator>=(const vector_iterator<T, c> &rhs) const
 		{
 			return !(*this < rhs);
 		}
 
-		difference_type operator-(const vector_iterator &rhs) const
+		template <bool c>
+		difference_type operator-(const vector_iterator<T, c> &rhs) const
 		{
-			return _m_ptr - rhs._m_ptr;
+			return &(**this) - &(*rhs);
 		}
-
-		// operator+ (difference_type& lhs, const vector_iterator& rhs)
 
 		/* #endregion */
 	};
 
-    template<typename T_L, typename T_R>
-    typename ft::vector_iterator<T_L>::difference_type
-    operator!=(const ft::vector_iterator<T_L, true> lhs,
-              const ft::vector_iterator<T_R> rhs)
-    {
-        return (&(*lhs) != &(*rhs));
-    }
+	template <typename T, bool c>
+	vector_iterator<T, c> operator+ (typename vector_iterator<T, c>::difference_type lhs, const vector_iterator<T, c> & rhs) {
+		vector_iterator<T, c> result = rhs + lhs;
+		return result;
+	}
+
+	template <typename T, bool c>
+	vector_iterator<T, c> operator- (typename vector_iterator<T, c>::difference_type lhs, const vector_iterator<T, c> & rhs) {
+		vector_iterator<T, c> result = rhs - lhs;
+		return result;
+	}
 
 	/* #endregion */
 
@@ -248,7 +257,13 @@ namespace ft
 
 			this->_M_alloc = alloc;
 
-			this->assign(first, last);
+			size_type size = last - first;
+			
+			this->_create_storage(size * 2);
+
+			this->_range_copy(&(*first), this->_M_data._M_start, size);
+
+			this->_M_data._M_finish = this->_M_data._M_start + size;
 		}
 
 		vector(const vector &x)
@@ -269,6 +284,7 @@ namespace ft
 		vector &operator=(const vector &x)
 		{
 			Debug::Log << "Vector: operator= Called" << std::endl;
+			
 			this->_M_alloc = x.get_allocator();
 
 			this->_create_storage(x.capacity());
@@ -495,14 +511,14 @@ namespace ft
 
 			if (target_size <= this->capacity()) {
 				pointer insert_pos = this->_M_data._M_start + elems_before;
-				this->_range_copy(insert_pos, insert_pos + 1, elems_after);
+				
+				memmove(insert_pos + 1, insert_pos, elems_after * sizeof(value_type));
 				this->_construct(insert_pos, val);
 				this->_M_data._M_finish += 1;
 				return position;
 			}
 			else {
 				pointer old_start = this->_M_data._M_start;
-				pointer old_finish = this->_M_data._M_finish;
 				size_type old_capacity = this->capacity();
 
 				size_type new_capacity = old_capacity * 2;
@@ -511,17 +527,15 @@ namespace ft
 
 				this->_create_storage(new_capacity);
 
-				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
 				this->_construct(insert_pos, val);
 
-				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + 1, elems_after);
+				memmove(this->_M_data._M_start + elems_before + 1, old_start + elems_before, elems_after * sizeof(value_type));
 
 				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + 1;
-
-				this->_destroy(old_start, old_finish);
 
 				this->_M_alloc.deallocate(old_start, old_capacity);
 
@@ -538,7 +552,8 @@ namespace ft
 
 			if (target_size <= this->capacity()) {
 				pointer insert_pos = this->_M_data._M_start + elems_before;
-				this->_range_copy(insert_pos, insert_pos + n, elems_after);
+
+				memmove(insert_pos + n, insert_pos, elems_after * sizeof(value_type));
 
 				for (int i = 0; i < (int)n; i++)
 					this->_construct(insert_pos + i, val);
@@ -547,26 +562,22 @@ namespace ft
 			}
 			else {
 				pointer old_start = this->_M_data._M_start;
-				pointer old_finish = this->_M_data._M_finish;
 				size_type old_capacity = this->capacity();
 
-				// estimate new capacity
 				size_type new_capacity = target_size * 2;
 
 				this->_create_storage(new_capacity);
 
-				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
 				for (int i = 0; i < (int)n; i++)
 					this->_construct(insert_pos + i, val);
 
-				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
+				memmove(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after * sizeof(value_type));
 
 				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
-
-				this->_destroy(old_start, old_finish);
 
 				this->_M_alloc.deallocate(old_start, old_capacity);		
 			}
@@ -583,7 +594,8 @@ namespace ft
 
 			if (target_size <= this->capacity()) {
 				pointer insert_pos = this->_M_data._M_start + elems_before;
-				this->_range_copy(insert_pos, insert_pos + n, elems_after);
+
+				memmove(insert_pos + n, insert_pos, elems_after * sizeof(value_type));
 
 				for (int i = 0; i < (int)n; i++)
 				{
@@ -595,7 +607,6 @@ namespace ft
 			}
 			else {
 				pointer old_start = this->_M_data._M_start;
-				pointer old_finish = this->_M_data._M_finish;
 				size_type old_capacity = this->capacity();
 
 				// estimate new capacity
@@ -603,7 +614,7 @@ namespace ft
 
 				this->_create_storage(new_capacity);
 
-				this->_range_copy(old_start, this->_M_data._M_start, elems_before);
+				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
@@ -613,11 +624,9 @@ namespace ft
 					this->_construct(insert_pos + i, val);
 				}
 
-				this->_range_copy(old_start + elems_before, this->_M_data._M_start + elems_before + n, elems_after);
+				memmove(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after * sizeof(value_type));
 
 				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
-
-				this->_destroy(old_start, old_finish);
 
 				this->_M_alloc.deallocate(old_start, old_capacity);		
 			}
@@ -632,7 +641,7 @@ namespace ft
 
 			this->_M_alloc.destroy(erase_pos);
 			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			this->_range_copy(erase_pos + 1, erase_pos, elems_after);
+			memmove(erase_pos, erase_pos + 1, elems_after * sizeof(value_type))
 			this->_M_data._M_finish -= 1;
 
 			return (position);
@@ -649,7 +658,7 @@ namespace ft
 				this->_M_alloc.destroy(erase_pos + i);
 
 			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			this->_range_copy(erase_pos + n, erase_pos, elems_after);
+			memmove(erase_pos, erase_pos + n, elems_after * sizeof(value_type))
 			this->_M_data._M_finish -= n;
 
 			return (iterator(this->_M_data._M_start + n));
@@ -744,18 +753,16 @@ namespace ft
 
 		void _realloc(size_type new_capacity) {
 			pointer old_start = this->_M_data._M_start;
-			pointer old_finish = this->_M_data._M_finish;
+			//pointer old_finish = this->_M_data._M_finish;
 			size_type	old_capacity = this->capacity();
 
 			const size_type old_size = this->size();
 
 			this->_create_storage(new_capacity);
 
-			this->_range_copy(old_start, this->_M_data._M_start, old_size);
+			memmove(this->_M_data._M_start, old_start, old_size * sizeof(value_type));
 
 			this->_M_data._M_finish = this->_M_data._M_start + old_size;
-
-			this->_destroy(old_start, old_finish);
 
 			this->_M_alloc.deallocate(old_start, old_capacity);
 		}
