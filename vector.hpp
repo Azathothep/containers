@@ -150,7 +150,7 @@ namespace ft
 		template <bool c>
 		bool operator>(const vector_iterator<T, c> &rhs) const
 		{
-			return (!(*this < rhs) && (*this != rhs));
+			return (rhs < *this);
 		}
 
 		template <bool c>
@@ -261,14 +261,15 @@ namespace ft
 			
 			this->_create_storage(size * 2);
 
-			InputIterator it = first;
+			// sort of a range copy
 			pointer p = this->_M_data._M_start;
+			InputIterator it = first;
 
 			for (; it != last; it++) {
 				this->_M_alloc.construct(p, *it);
 				p++;
 			}
-			
+
 			this->_M_data._M_finish = this->_M_data._M_start + size;
 		}
 
@@ -820,6 +821,68 @@ namespace ft
 
 		/* #endregion */
 	};
+
+	/* #region relational operators */
+
+	template <class T, class Alloc> 
+	bool operator== (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {		
+		if (lhs.size() != rhs.size())
+			return false;
+
+		typename ft::vector<T, Alloc>::const_iterator lit = lhs.cbegin();
+		typename ft::vector<T, Alloc>::const_iterator rit = rhs.cbegin();
+
+		for (; (lit != lhs.cend() && rit != rhs.cend()); lit++) {
+			if (*lit != *rit)
+				return false;
+			rit++;
+		}
+
+		if (lit != lhs.cend() || rit != rhs.cend())
+			return false;
+
+		return true;
+	}
+
+	template <class T, class Alloc>
+	bool operator!= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+		return !(lhs == rhs);
+	}
+
+	template <class T, class Alloc>
+	bool operator<  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+		typename ft::vector<T, Alloc>::const_iterator lit = lhs.cbegin();
+		typename ft::vector<T, Alloc>::const_iterator rit = rhs.cbegin();
+
+		while (lit != lhs.cend())
+		{
+			if (rit == rhs.cend() || *lit > *rit)
+				return false;
+			else if (*lit < *rit)
+				return true;
+
+			lit++; rit++;
+		}
+
+		return rit != rhs.cend();
+	}
+
+	template <class T, class Alloc>
+	bool operator<= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+		return !(lhs > rhs);
+	}
+
+	template <class T, class Alloc>
+	bool operator>  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+		return rhs < lhs;
+	}
+
+	template <class T, class Alloc>
+	bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
+		return !(lhs < rhs);
+	}
+
+	/* #endregion */
 }
 
 #endif
