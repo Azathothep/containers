@@ -169,16 +169,16 @@ namespace ft
 	};
 
 	template <typename T, bool c>
-	vector_iterator<T, c> operator+ (typename vector_iterator<T, c>::difference_type lhs, const vector_iterator<T, c> & rhs) {
-		vector_iterator<T, c> result = rhs + lhs;
+	vector_iterator<T, c> operator+ (typename vector_iterator<T, c>::difference_type n, const vector_iterator<T, c> & rhs) {
+		vector_iterator<T, c> result = rhs + n;
 		return result;
 	}
 
-	template <typename T, bool c>
-	vector_iterator<T, c> operator- (typename vector_iterator<T, c>::difference_type lhs, const vector_iterator<T, c> & rhs) {
-		vector_iterator<T, c> result = rhs - lhs;
-		return result;
-	}
+	// template <typename T, bool c>
+	// vector_iterator<T, c> operator- (typename vector_iterator<T, c>::difference_type n, const vector_iterator<T, c> & rhs) {
+	// 	vector_iterator<T, c> result = rhs - n;
+	// 	return result;
+	// }
 
 	/* #endregion */
 
@@ -313,10 +313,10 @@ namespace ft
 		iterator end() { return iterator(this->_M_data._M_finish); }
 		const_iterator end() const { return const_iterator(this->_M_data._M_finish); }
 		const_iterator cend() const { return const_iterator(this->_M_data._M_finish); }
-		reverse_iterator rbegin() const { return reverse_iterator(end()); }
-		const_reverse_iterator crbegin() const { return const_reverse_iterator(cend()); };
-		reverse_iterator rend() const { return reverse_iterator(begin()); }
-		const_reverse_iterator crend() const { return const_reverse_iterator(cbegin()); };
+		reverse_iterator rbegin() const { return reverse_iterator(iterator(this->_M_data._M_finish)); }
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(this->cend()); };
+		reverse_iterator rend() const { return reverse_iterator(iterator(this->_M_data._M_start)); }
+		const_reverse_iterator crend() const { return const_reverse_iterator(this->cbegin()); };
 
 		/* #endregion */
 
