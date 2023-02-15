@@ -639,16 +639,21 @@ namespace ft
 			}
 		}
 
-		// ERASE PARTIALLY WORKING - check the proper construction / destruction of elements
 		iterator erase(iterator position) {
 			Debug::Log << "Vector: single erase" << std::endl;
 
 			pointer erase_pos = &(*position);
-			size_type elems_after = erase_pos - this->_M_data._M_start;
+			
+			size_type elems_after = this->_M_data._M_finish - erase_pos - 1;
 
 			this->_M_alloc.destroy(erase_pos);
-			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			memmove(erase_pos, erase_pos + 1, elems_after * sizeof(value_type));
+
+			for (int i = 0; i < (int)elems_after; i++)
+			{
+				this->_construct(&erase_pos[i], erase_pos[i + 1]);
+				this->_M_alloc.destroy(&erase_pos[i + 1]);
+			}
+
 			this->_M_data._M_finish -= 1;
 
 			return (position);
@@ -658,17 +663,21 @@ namespace ft
 			Debug::Log << "Vector: multiple erase of size " << this->_distance(first, last) << std::endl;
 
 			pointer erase_pos = &(*first);
-			size_type n = this->_distance(first, last);
-			size_type elems_after = erase_pos - this->_M_data._M_start + n;
+			size_type n = last - first;
+			size_type elems_after = this->_M_data._M_finish - (erase_pos + n);
 
 			for (int i = 0; i < (int)n; i++)
 				this->_M_alloc.destroy(erase_pos + i);
 
-			// Does this have to reconstruct the objects ? If so, we have to destroy the elements after each relocation...
-			memmove(erase_pos, erase_pos + n, elems_after * sizeof(value_type));
+			for (int i = 0; i < (int)elems_after; i++)
+			{
+				this->_construct(&erase_pos[i], erase_pos[i + n]);
+				this->_M_alloc.destroy(&erase_pos[i + n]);
+			}
+
 			this->_M_data._M_finish -= n;
 
-			return (iterator(this->_M_data._M_start + n));
+			return (first);
 		}
 
 		void swap(vector& x) {
