@@ -217,6 +217,14 @@ namespace ft
 			pointer _M_start;
 			pointer _M_finish;
 			pointer _M_end_of_storage;
+
+			_VECTOR_DATA& operator=(const _VECTOR_DATA& OTHER) {
+				this->_M_start = OTHER._M_start;
+				this->_M_finish = OTHER._M_finish;
+				this->_M_end_of_storage = OTHER._M_end_of_storage;
+
+				return *this;
+			}
 		};
 
 		_VECTOR_DATA	_M_data;
@@ -493,7 +501,7 @@ namespace ft
 			}
 
 			Debug::Log << "Vector: adding value to vector" << std::endl;
-			this->_construct(this->_M_data._M_finish, __x);
+			this->_M_alloc.construct(this->_M_data._M_finish, __x);
 			this->_M_data._M_finish += 1;
 		}
 
@@ -508,49 +516,8 @@ namespace ft
 
 			this->_M_data._M_finish -= 1;
 		}
-	
-		iterator insert(iterator position, const value_type& val) {
-			Debug::Log << "Vector: single insert" << std::endl;
 
-			size_type target_size = this->size() + 1;
-			size_type elems_before = position - this->begin();
-			size_type elems_after = this->size() - elems_before;
-
-			if (target_size <= this->capacity()) {
-				pointer insert_pos = this->_M_data._M_start + elems_before;
-				
-				memmove(insert_pos + 1, insert_pos, elems_after * sizeof(value_type));
-				this->_construct(insert_pos, val);
-				this->_M_data._M_finish += 1;
-				return position;
-			}
-			else {
-				pointer old_start = this->_M_data._M_start;
-				size_type old_capacity = this->capacity();
-
-				size_type new_capacity = old_capacity * 2;
-				if (new_capacity == 0)
-					new_capacity = BASE_CAPACITY;
-
-				this->_create_storage(new_capacity);
-
-				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
-
-				pointer insert_pos = this->_M_data._M_start + elems_before;
-
-				this->_construct(insert_pos, val);
-
-				memmove(this->_M_data._M_start + elems_before + 1, old_start + elems_before, elems_after * sizeof(value_type));
-
-				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + 1;
-
-				this->_M_alloc.deallocate(old_start, old_capacity);
-
-				return (iterator(insert_pos));			
-			}
-		}
-
-		void insert(iterator position, size_type n, const value_type& val) {
+		iterator _insert(iterator position, size_type n, const value_type& val) {
 			Debug::Log << "Vector: Multiple insert of size " << n << std::endl;
 
 			size_type target_size = this->size() + n;
@@ -560,12 +527,14 @@ namespace ft
 			if (target_size <= this->capacity()) {
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
-				memmove(insert_pos + n, insert_pos, elems_after * sizeof(value_type));
+				this->_move(insert_pos + n, insert_pos, elems_after);
 
 				for (int i = 0; i < (int)n; i++)
-					this->_construct(insert_pos + i, val);
+					this->_M_alloc.construct(insert_pos + i, val);
 				
 				this->_M_data._M_finish += n;
+
+				return position;
 			}
 			else {
 				pointer old_start = this->_M_data._M_start;
@@ -575,19 +544,33 @@ namespace ft
 
 				this->_create_storage(new_capacity);
 
-				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
+				this->_move(this->_M_data._M_start, old_start, elems_before);
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
 				for (int i = 0; i < (int)n; i++)
-					this->_construct(insert_pos + i, val);
+					this->_M_alloc.construct(insert_pos + i, val);
 
-				memmove(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after * sizeof(value_type));
+				this->_move(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after);
 
 				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
 
-				this->_M_alloc.deallocate(old_start, old_capacity);		
+				this->_M_alloc.deallocate(old_start, old_capacity);
+
+				return iterator(insert_pos);
 			}
+		}
+
+		iterator insert(iterator position, const value_type& val) {
+			Debug::Log << "Vector: single insert" << std::endl;
+
+			return this->_insert(position, 1, val);
+		}
+
+		void insert(iterator position, size_type n, const value_type& val) {
+			Debug::Log << "Vector: Multiple insert of size " << n << std::endl;
+
+			this->_insert(position, n, val);
 		}
 
 		template <class InputIterator>
@@ -602,12 +585,12 @@ namespace ft
 			if (target_size <= this->capacity()) {
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
-				memmove(insert_pos + n, insert_pos, elems_after * sizeof(value_type));
+				this->_move(insert_pos + n, insert_pos, elems_after);
 
 				for (int i = 0; i < (int)n; i++)
 				{
 					value_type val = *(this->_add(first, i));
-					this->_construct(insert_pos + i, val);
+					this->_M_alloc.construct(insert_pos + i, val);
 				}
 				
 				this->_M_data._M_finish += n;
@@ -621,17 +604,17 @@ namespace ft
 
 				this->_create_storage(new_capacity);
 
-				memmove(this->_M_data._M_start, old_start, elems_before * sizeof(value_type));
+				this->_move(this->_M_data._M_start, old_start, elems_before);
 
 				pointer insert_pos = this->_M_data._M_start + elems_before;
 
 				for (int i = 0; i < (int)n; i++)
 				{
 					value_type val = *(this->_add(first, i));
-					this->_construct(insert_pos + i, val);
+					this->_M_alloc.construct(insert_pos + i, val);
 				}
 
-				memmove(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after * sizeof(value_type));
+				this->_move(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after);
 
 				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
 
@@ -639,29 +622,27 @@ namespace ft
 			}
 		}
 
-		iterator erase(iterator position) {
-			Debug::Log << "Vector: single erase" << std::endl;
-
-			pointer erase_pos = &(*position);
+		void _move(pointer dest, pointer src, size_type n) {
+			if (dest == src)
+				return;
 			
-			size_type elems_after = this->_M_data._M_finish - erase_pos - 1;
-
-			this->_M_alloc.destroy(erase_pos);
-
-			for (int i = 0; i < (int)elems_after; i++)
+			if (dest < src)
 			{
-				this->_construct(&erase_pos[i], erase_pos[i + 1]);
-				this->_M_alloc.destroy(&erase_pos[i + 1]);
+				for (int i = 0; i < (int)n; i++) {
+					this->_M_alloc.construct(dest + i, src[i]);
+					this->_M_alloc.destroy(src + i);
+				}
+			}
+			else {
+				for (int i = n - 1; i >= 0; i--) {
+					this->_M_alloc.construct(dest + i, src[i]);
+					this->_M_alloc.destroy(src + i);
+				}
 			}
 
-			this->_M_data._M_finish -= 1;
-
-			return (position);
 		}
 
-		iterator erase(iterator first, iterator last) {
-			Debug::Log << "Vector: multiple erase of size " << this->_distance(first, last) << std::endl;
-
+		iterator _erase(iterator first, iterator last) {
 			pointer erase_pos = &(*first);
 			size_type n = last - first;
 			size_type elems_after = this->_M_data._M_finish - (erase_pos + n);
@@ -669,31 +650,31 @@ namespace ft
 			for (int i = 0; i < (int)n; i++)
 				this->_M_alloc.destroy(erase_pos + i);
 
-			for (int i = 0; i < (int)elems_after; i++)
-			{
-				this->_construct(&erase_pos[i], erase_pos[i + n]);
-				this->_M_alloc.destroy(&erase_pos[i + n]);
-			}
+			this->_move(erase_pos, erase_pos + n, elems_after);
 
 			this->_M_data._M_finish -= n;
 
 			return (first);
 		}
 
+		iterator erase(iterator position) {
+			Debug::Log << "Vector: single erase" << std::endl;
+
+			return this->_erase(position, position + 1);
+		}
+
+		iterator erase(iterator first, iterator last) {
+			Debug::Log << "Vector: multiple erase of size " << this->_distance(first, last) << std::endl;
+
+			return this->_erase(first, last);
+		}
+
 		void swap(vector& x) {
 			Debug::Log << "Vector: swapping" << std::endl;
 
-			pointer xStart = x._M_data._M_start;
-			pointer xFinish = x._M_data._M_finish;
-			pointer xEndOfStorage = x._M_data._M_end_of_storage;
-
-			x._M_data._M_start = this->_M_data._M_start;
-			x._M_data._M_finish = this->_M_data._M_finish;
-			x._M_data._M_end_of_storage = this->_M_data._M_end_of_storage;
-
-			this->_M_data._M_start = xStart;
-			this->_M_data._M_finish = xFinish;
-			this->_M_data._M_end_of_storage = xEndOfStorage;
+			_VECTOR_DATA temp = x._M_data;
+			x._M_data = this->_M_data;
+			this->_M_data = temp;
 		};
 
 		void clear() {
@@ -742,19 +723,7 @@ namespace ft
 			pointer __end = __start + __n;
 
 			for (__p = __start; __p < __end; __p++)
-				this->_construct(__p, __val);
-		}
-
-		pointer _allocate(size_type __n)
-		{
-			Debug::Log << "Vector: allocating for " << __n << " elements" << std::endl;
-			return _M_alloc.allocate(__n);
-		}
-
-		void _construct(pointer __elem, value_type __val)
-		{
-			Debug::Log << "Vector: constructing element at address " << __elem << std::endl;
-			_M_alloc.construct(__elem, __val);
+				this->_M_alloc.construct(__p, __val);
 		}
 
 		void _create_storage(size_t __n) {
@@ -762,7 +731,7 @@ namespace ft
 
 			// !!!!! MAX SIZE !!!!!
 
-			this->_M_data._M_start = this->_allocate(__n);
+			this->_M_data._M_start = this->_M_alloc.allocate(__n);
 			this->_M_data._M_finish = this->_M_data._M_start;
 			this->_M_data._M_end_of_storage = this->_M_data._M_start + __n;
 		}
