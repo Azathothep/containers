@@ -5,12 +5,12 @@
 
 #include <memory>
 #include <stdexcept>
-#include "std/iterator_traits.hpp"
-#include "std/reverse_iterator.hpp"
-#include "std/enable_if.hpp"
-#include "std/is_integral.hpp"
 #include <stdlib.h>
 #include <cstring>
+#include "ft/iterator_traits.hpp"
+#include "ft/reverse_iterator.hpp"
+#include "ft/enable_if.hpp"
+#include "ft/is_integral.hpp"
 
 namespace ft
 {
@@ -446,20 +446,6 @@ namespace ft
 
 		// # modifiers
 
-		void _clean_sized(size_type n) {
-			this->clear();
-			
-			if (n > this->capacity()) {
-				size_type new_capacity = n * 2;
-				if (new_capacity == 0)
-					new_capacity = BASE_CAPACITY;
-
-				this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
-
-				this->_create_storage(new_capacity);
-			}
-		}
-
 		template <class InputIterator>
 		void assign(InputIterator first, InputIterator last, typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) {
 			size_type n = this->_distance(first, last);
@@ -517,49 +503,7 @@ namespace ft
 			this->_M_data._M_finish -= 1;
 		}
 
-		iterator _insert(iterator position, size_type n, const value_type& val) {
-			Debug::Log << "Vector: Multiple insert of size " << n << std::endl;
-
-			size_type target_size = this->size() + n;
-			size_type elems_before = position - this->begin();
-			size_type elems_after = this->size() - elems_before;
-
-			if (target_size <= this->capacity()) {
-				pointer insert_pos = this->_M_data._M_start + elems_before;
-
-				this->_move(insert_pos + n, insert_pos, elems_after);
-
-				for (int i = 0; i < (int)n; i++)
-					this->_M_alloc.construct(insert_pos + i, val);
-				
-				this->_M_data._M_finish += n;
-
-				return position;
-			}
-			else {
-				pointer old_start = this->_M_data._M_start;
-				size_type old_capacity = this->capacity();
-
-				size_type new_capacity = target_size * 2;
-
-				this->_create_storage(new_capacity);
-
-				this->_move(this->_M_data._M_start, old_start, elems_before);
-
-				pointer insert_pos = this->_M_data._M_start + elems_before;
-
-				for (int i = 0; i < (int)n; i++)
-					this->_M_alloc.construct(insert_pos + i, val);
-
-				this->_move(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after);
-
-				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
-
-				this->_M_alloc.deallocate(old_start, old_capacity);
-
-				return iterator(insert_pos);
-			}
-		}
+		
 
 		iterator insert(iterator position, const value_type& val) {
 			Debug::Log << "Vector: single insert" << std::endl;
@@ -622,41 +566,6 @@ namespace ft
 			}
 		}
 
-		void _move(pointer dest, pointer src, size_type n) {
-			if (dest == src)
-				return;
-			
-			if (dest < src)
-			{
-				for (int i = 0; i < (int)n; i++) {
-					this->_M_alloc.construct(dest + i, src[i]);
-					this->_M_alloc.destroy(src + i);
-				}
-			}
-			else {
-				for (int i = n - 1; i >= 0; i--) {
-					this->_M_alloc.construct(dest + i, src[i]);
-					this->_M_alloc.destroy(src + i);
-				}
-			}
-
-		}
-
-		iterator _erase(iterator first, iterator last) {
-			pointer erase_pos = &(*first);
-			size_type n = last - first;
-			size_type elems_after = this->_M_data._M_finish - (erase_pos + n);
-
-			for (int i = 0; i < (int)n; i++)
-				this->_M_alloc.destroy(erase_pos + i);
-
-			this->_move(erase_pos, erase_pos + n, elems_after);
-
-			this->_M_data._M_finish -= n;
-
-			return (first);
-		}
-
 		iterator erase(iterator position) {
 			Debug::Log << "Vector: single erase" << std::endl;
 
@@ -693,6 +602,99 @@ namespace ft
 		/* #region private methods */
 
 	private:
+
+		void _clean_sized(size_type n) {
+			this->clear();
+			
+			if (n > this->capacity()) {
+				size_type new_capacity = n * 2;
+				if (new_capacity == 0)
+					new_capacity = BASE_CAPACITY;
+
+				this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
+
+				this->_create_storage(new_capacity);
+			}
+		}
+
+		iterator _erase(iterator first, iterator last) {
+			pointer erase_pos = &(*first);
+			size_type n = last - first;
+			size_type elems_after = this->_M_data._M_finish - (erase_pos + n);
+
+			for (int i = 0; i < (int)n; i++)
+				this->_M_alloc.destroy(erase_pos + i);
+
+			this->_move(erase_pos, erase_pos + n, elems_after);
+
+			this->_M_data._M_finish -= n;
+
+			return (first);
+		}
+
+		void _move(pointer dest, pointer src, size_type n) {
+			if (dest == src)
+				return;
+			
+			if (dest < src)
+			{
+				for (int i = 0; i < (int)n; i++) {
+					this->_M_alloc.construct(dest + i, src[i]);
+					this->_M_alloc.destroy(src + i);
+				}
+			}
+			else {
+				for (int i = n - 1; i >= 0; i--) {
+					this->_M_alloc.construct(dest + i, src[i]);
+					this->_M_alloc.destroy(src + i);
+				}
+			}
+
+		}
+
+		iterator _insert(iterator position, size_type n, const value_type& val) {
+			Debug::Log << "Vector: Multiple insert of size " << n << std::endl;
+
+			size_type target_size = this->size() + n;
+			size_type elems_before = position - this->begin();
+			size_type elems_after = this->size() - elems_before;
+
+			if (target_size <= this->capacity()) {
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+
+				this->_move(insert_pos + n, insert_pos, elems_after);
+
+				for (int i = 0; i < (int)n; i++)
+					this->_M_alloc.construct(insert_pos + i, val);
+				
+				this->_M_data._M_finish += n;
+
+				return position;
+			}
+			else {
+				pointer old_start = this->_M_data._M_start;
+				size_type old_capacity = this->capacity();
+
+				size_type new_capacity = target_size * 2;
+
+				this->_create_storage(new_capacity);
+
+				this->_move(this->_M_data._M_start, old_start, elems_before);
+
+				pointer insert_pos = this->_M_data._M_start + elems_before;
+
+				for (int i = 0; i < (int)n; i++)
+					this->_M_alloc.construct(insert_pos + i, val);
+
+				this->_move(this->_M_data._M_start + elems_before + n, old_start + elems_before, elems_after);
+
+				this->_M_data._M_finish = this->_M_data._M_start + elems_before + elems_after + n;
+
+				this->_M_alloc.deallocate(old_start, old_capacity);
+
+				return iterator(insert_pos);
+			}
+		}
 
 		template <typename Iterator>
 		size_type _distance(Iterator first, Iterator last) {
