@@ -26,6 +26,16 @@ namespace ft {
 				this->second = pr.second;
 				return *this;
 			}
+	};
+
+	template <typename pair>
+	void pair_printer(pair & value) {
+		std::cout << value.first;
+	}
+
+	template <typename pair>
+	void pair_printer(pair & value, typename ft::enable_if< !ft::is_integral<typename pair::first_type>::value >::type* = NULL) {
+		std::cout << "type not printable!";
 	}
 }
 

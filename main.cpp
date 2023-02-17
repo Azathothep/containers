@@ -1,79 +1,37 @@
 #include "vector.hpp"
-#include "std/reverse_iterator.hpp"
-#include "std/iterator_traits.hpp"
+#include "ft/reverse_iterator.hpp"
+#include "ft/iterator_traits.hpp"
 #include <vector>
 
-int main(int argc, char **argv) {
-	argc += 0;
-	(void)argv;
+#include "node.hpp"
+#include "ft/make_pair.hpp"
+#include "ft/pair.hpp"
+#include "b_tree.hpp"
 
-	std::ofstream log;
-	log.open("log.txt", std::ofstream::out | std::ofstream::trunc);
-	log.close();
+int main() {
+	ft::node< ft::pair<int, bool> > n(ft::make_pair<int, bool>(0, true));
+	ft::node< ft::pair<int, bool> > n1(ft::make_pair<int, bool>(1, true));
+	ft::node< ft::pair<int, bool> > n2(ft::make_pair<int, bool>(2, true));
+	ft::node< ft::pair<int, bool> > n3(ft::make_pair<int, bool>(3, true));
+	ft::node< ft::pair<int, bool> > n4(ft::make_pair<int, bool>(4, true));
+	ft::node< ft::pair<int, bool> > n5(ft::make_pair<int, bool>(5, true));
 
-	{
-		std::cout << "vector<int>" << std::endl;
-	
-		ft::vector<int> v;
+	n.red = false;
+	n1.red = true;
+	n2.red = false;
+	n3.red = true;
+	n4.red = false;
+	n5.red = true;
 
-		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
+	n.right = &n1;
+	n1.right = &n2;
+	n.left = &n3;
+	n3.right = &n4;
+	n4.left = &n2;
 
-		v.assign(5, 10);
+	ft::print_tree(&n, &ft::pair_printer);
 
-		v.push_back(0);
-		v.push_back(1);
-		v.push_back(2);
-		v.push_back(3);
-		v.push_back(4);
-		v.pop_back();
-		v.push_back(5);
-		v.push_back(6);
-		v.push_back(7);
-
-		ft::vector<int> v2;
-
-		v.erase(v.begin() + 2, v.begin() + 4);
-
-		std::cout << "const_iterator" << std::endl;
-
-		ft::vector<int>::const_iterator cit;
-
-		int i = 0;
-		for (cit = v.begin(); cit != v.end(); cit++)
-		{
-			std::cout << "[" << i << "]: " << *cit << std::endl;
-			i++;
-		}
-
-		std::cout << "size = " << v.size() << " & capacity = " << v.capacity() << std::endl;
-
-		std::cout << "reverse_iterator" << std::endl;
-
-		ft::vector<int>::const_reverse_iterator rit;
-
-		for (rit = v.crbegin(); rit != v.crend(); rit++)
-			std::cout << *rit << std::endl;
-	}
-
-	{
-		// std::cout << std::endl << "vector< vector<int> >" << std::endl << std::endl;
-
-		// std::vector<int> v(1);
-
-		// ft::vector< std::vector<int> > vov(5);
-
-		// vov[0] = v;
-		// vov[1] = v;
-		// vov[2] = v;
-		// vov[3] = v;
-		// vov[4] = v;
-
-		// ft::vector< std::vector<int> >::iterator it;
-
-		// for (it = vov.begin(); it != vov.end(); it++)
-		// 	std::cout << (*it)[0] << std::endl;
-	}
-
+	ft::B_TREE< int > tree( 0 );
 
 	return 0;
 }
