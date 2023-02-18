@@ -35,6 +35,7 @@ namespace ft {
 
 	template <typename pair>
 	void pair_printer(pair & value, typename ft::enable_if< !ft::is_integral<typename pair::first_type>::value >::type* = NULL) {
+		(void)value;
 		std::cout << "type not printable!";
 	}
 }
