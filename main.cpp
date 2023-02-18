@@ -17,7 +17,7 @@ struct integral_key_compare {
 int main() {
 	typedef ft::pair<int, bool> m_pair;
 
-	ft::B_TREE< m_pair, integral_key_compare< m_pair > > tree( ft::make_pair<int, bool>(0, true) );
+	ft::B_TREE< m_pair, integral_key_compare< m_pair > > tree;
 
 	tree.insert( ft::make_pair<int, bool>(1, true) );
 	tree.insert( ft::make_pair<int, bool>(2, true) );
