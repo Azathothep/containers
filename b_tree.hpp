@@ -120,6 +120,8 @@ namespace ft {
 				node *p = n->parent;
 				node *g = n->grandparent();
 
+				this->_print_tree();
+
 				if (p == g->left && n == p->left)
 				{
 					Debug::Log << "DETECTING LL CASE" << std::endl;
@@ -146,6 +148,8 @@ namespace ft {
 					this->_rotate_right(g);
 					this->_swap_colors(g, n);
 				}
+				else
+					Debug::Log << "No case found, " << p->value.first << ",  " << g->value.first << std::endl;
 
 				this->_print_tree();
 
@@ -158,8 +162,11 @@ namespace ft {
 				node *vassal = traitor->left;
 
 				this->_replace(n, traitor);
+				n->parent = traitor;
 				traitor->left = n;
 				n->right = vassal;
+				if (vassal)
+					vassal->parent = n;
 			}
 
 			void _rotate_right(node *n) {
@@ -168,15 +175,36 @@ namespace ft {
 				node *vassal = traitor->right;
 
 				this->_replace(n, traitor);
+				n->parent = traitor;
 				traitor->right = n;
 				n->left = vassal;
+				if (vassal)
+					vassal->parent = n;
 			}
 
 			void _replace(node *n, node *r) {
-				if (n == n->parent->left)
-					n->parent->left = r;
-				else if (n == n->parent->right)
-					n->parent->right = r;
+				if (n == this->_root)
+				{
+					this->_root = r;
+					r->parent = NULL;
+					return;
+				}
+				
+				node *p = n->parent;
+
+				if (p == NULL)
+					return;
+
+				if (n == p->left)
+				{
+					p->left = r;
+					r->parent = p;
+				}
+				else if (n == p->right)
+				{
+					p->right = r;
+					r->parent = p;
+				}
 			}
 
 			void _swap_colors(node *n1, node *n2) {
