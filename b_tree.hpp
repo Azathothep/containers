@@ -91,7 +91,7 @@ namespace ft {
 				if (n == this->_root) {
 					Debug::Log << "Map: recolouring root" << std::endl;
 					n->color = BLACK;
-					print_tree(*this, Debug::Log, &ft::pair_printer<value_type>);
+					this->_print_tree();
 					return;
 			 	} 
 				
@@ -107,7 +107,7 @@ namespace ft {
 					n->parent->color = BLACK;
 					n->aunt()->color = BLACK;
 					n->grandparent()->color = RED;
-					print_tree(*this, Debug::Log, &ft::pair_printer<value_type>);
+					this->_print_tree();
 					this->_recolor(n->grandparent());
 				}
 				else {
@@ -147,6 +147,8 @@ namespace ft {
 					this->_swap_colors(g, n);
 				}
 
+				this->_print_tree();
+
 				//then recolour
 			}
 
@@ -181,6 +183,10 @@ namespace ft {
 				int temp = n1->color;
 				n1->color = n2->color;
 				n2->color = temp;
+			}
+
+			void _print_tree() {
+				print_tree(*this, Debug::Log, &ft::pair_printer<value_type>);
 			}
 	};
 }

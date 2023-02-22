@@ -26,7 +26,6 @@ int main() {
 	tree.insert( ft::make_pair(10, true) );
 	tree.insert( ft::make_pair(11, true) );
 	tree.insert( ft::make_pair(12, true) );
-	tree.insert( ft::make_pair(13, true) );
 
 	print_tree(tree, std::cout, &ft::pair_printer<m_pair>);
 
