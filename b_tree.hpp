@@ -95,7 +95,7 @@ namespace ft {
 					return;
 			 	} 
 				
-				if (n->parent == BLACK)
+				if (n->parent->color == BLACK)
 					return;
 
 				if (n->grandparent() == NULL)
@@ -138,14 +138,14 @@ namespace ft {
 				{
 					Debug::Log << "DETECTING LR CASE" << std::endl;
 					this->_rotate_left(p);
-					this->_rotate_left(g);
+					this->_rotate_right(g);
 					this->_swap_colors(g, n);
 				}
 				else if (p == g->right && n == p->left)
 				{
 					Debug::Log << "DETECTING RL CASE" << std::endl;
 					this->_rotate_right(p);
-					this->_rotate_right(g);
+					this->_rotate_left(g);
 					this->_swap_colors(g, n);
 				}
 				else
@@ -167,6 +167,9 @@ namespace ft {
 				n->right = vassal;
 				if (vassal)
 					vassal->parent = n;
+
+				this->_print_tree();
+				
 			}
 
 			void _rotate_right(node *n) {
@@ -180,6 +183,8 @@ namespace ft {
 				n->left = vassal;
 				if (vassal)
 					vassal->parent = n;
+
+				this->_print_tree();
 			}
 
 			void _replace(node *n, node *r) {
