@@ -1,5 +1,5 @@
 a.out
 log.txt
 .vscode
-containers_test
-othercontainer
+*containers_test
+*othercontainer
