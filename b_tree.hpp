@@ -7,25 +7,29 @@
 # include "print_tree.hpp"
 
 namespace ft {
-	template <typename T, class Compare = std::less<T>, class Alloc = std::allocator<ft::node<T> > >
+	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::node< ft::pair<Key, T> > > >
 	class B_TREE {
 		public:
-			typedef T 								value_type;
-			typedef Alloc 							allocator_type;
-			typedef Compare 						compare_type;
-			typedef typename ft::node<value_type> 	node;
+			typedef Key									key_type;
+			typedef T									value_type;
+			typedef ft::pair< key_type, value_type > 	pair_type;
+			typedef Alloc 								allocator_type;
+			typedef Compare 							compare_type;
+			typedef typename ft::node< pair_type > 		node;
 
 		private:
 			node 					*_root;
 			allocator_type 			_M_alloc;
 			compare_type			_M_comp;
 
+			ft::Tree_Printer<ft::integral_printer> 		_printer;
+
 		public:
-			B_TREE(const compare_type &comp = compare_type()) : _root(NULL) {
+			B_TREE(const compare_type &comp = compare_type()) : _root(NULL), _printer(Debug::Log) {
 				this->_M_comp = comp;
 			}
 
-			B_TREE(value_type const & val, const compare_type &comp = compare_type()) {
+			B_TREE(pair_type const & val, const compare_type &comp = compare_type()) : _printer(Debug::Log) {
 				this->_M_comp = comp;
 
 				this->_root = this->_create_node(val);
@@ -42,12 +46,16 @@ namespace ft {
 				if (current->right)
 					_move_destroy(current->right);
 				
-				this->_delete(current);
+				this->_delete_allocated(current);
 			}
 
 			node *root() { return this->_root; }
 
-			void insert(value_type const & val) {
+			pair_type const & get(key_type const & key) {
+				node *r = this->root();
+			}
+
+			void insert(pair_type const & val) {
 				node * n = this->_create_node(val);
 
 				if (this->_root)
@@ -60,7 +68,7 @@ namespace ft {
 			}
 
 		private:
-			node *_create_node(value_type const & val) {
+			node *_create_node(pair_type const & val) {
 				node *n = _M_alloc.allocate(1);
 				_M_alloc.construct(n, node(val));
 				return n;
@@ -72,7 +80,7 @@ namespace ft {
 					return;
 				}
 				
-				if (this->_M_comp((*current)->value, insert->value))
+				if (this->_M_comp((*current)->value.first, insert->value.first))
 					this->_move_insert(&((*current)->right), insert, *current);
 				else
 					this->_move_insert(&((*current)->left), insert, *current);
@@ -82,7 +90,7 @@ namespace ft {
 				*current = insert;
 				insert->parent = parent;
 				Debug::Log << "Map: inserting element" << std::endl;
-				print_tree(*this, Debug::Log, &ft::pair_printer<value_type>);
+				this->_print_tree();
 				this->_recolor(insert);
 			}
 
@@ -217,13 +225,22 @@ namespace ft {
 				n2->color = temp;
 			}
 
-			void _delete(node *n) {
+			node * _get_node(key_type const & key) {
+
+			}
+
+			void _delete_allocated(node *n) {
 				_M_alloc.destroy(n);
 				_M_alloc.deallocate(n, 1);
 			}
 
 			void _delete_node(node *n) {
 				Debug::Log << "Deleting node" << std::endl;
+				// In delete operation, we check the color of the sibling to decide the appropriate case
+				// Main violated property is change of black height in subtress as deletion of a black node
+				// may cause reduced black height in one root to leaf path
+
+				// To understand deletion, the notion of double black is used when a black node is deleted and replaced by a black child.
 
 				if (!n->left && !n->right)
 					_delete_leaf(n);
@@ -231,22 +248,28 @@ namespace ft {
 					_delete_one_child(n);
 				else
 					_delete_two_children(n);
+
+				// After the node is deleted, properties might be violated
 			}
 
 			void _delete_leaf(node *n) {
 				Debug::Log << "Deleting leaf" << std::endl;
+				// Remove it and update the parent node
 			}
 
 			void _delete_one_child(node *n) {
 				Debug::Log << "Deleting one child" << std::endl;
+				// Replace the node with its child -> copy the child to the node and delete the node
 			}
 
 			void _delete_two_children(node *n) {
 				Debug::Log << "Deleting two children" << std::endl;
+				// Replace the node with its in-order successor, which is the leftmost node in the right subtree
+				// Then delete the in-order successor node as if it has at most one child
 			}
 
 			void _print_tree() {
-				print_tree(*this, Debug::Log, &ft::pair_printer<value_type>);
+				_printer.print(*this);
 			}
 	};
 }

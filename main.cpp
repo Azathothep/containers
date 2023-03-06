@@ -9,15 +9,9 @@
 #include "b_tree.hpp"
 #include "print_tree.hpp"
 
-template <class T>
-struct integral_key_compare {
-	bool operator() (const T& x, const T& y) const { return x.first < y.first; }
-};
-
 int main() {
-	typedef ft::pair<int, bool> m_pair;
-
-	ft::B_TREE< m_pair, integral_key_compare< m_pair > > tree;
+	ft::B_TREE< int, bool > tree;
+	ft::Tree_Printer< ft::integral_printer > printer;
 
 	tree.insert( ft::make_pair(98, true) );
 	tree.insert( ft::make_pair(8, true) );
@@ -29,8 +23,7 @@ int main() {
 	tree.insert( ft::make_pair(52, true) );
 	tree.insert( ft::make_pair(99, true) );
 
-
-	print_tree(tree, std::cout, &ft::pair_printer<m_pair>);
+	printer.print(tree);
 
 	return 0;
 }

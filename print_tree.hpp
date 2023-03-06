@@ -6,7 +6,6 @@
 # include "ft/enable_if.hpp"
 
 # include "node.hpp"
-//# include "b_tree.hpp"
 
 # define P_BLACK "30"
 # define P_RED "31"
@@ -18,78 +17,98 @@
 # define P_WHITE "37"
 
 namespace ft {
-	template <typename T, class Compare, class Alloc>
+	template <class Key, class T, class Compare, class Alloc>
 	class B_TREE;
 }
 
-template <typename T>
-void integral_printer(T & value, std::ostream & o) {
-	o << value;
-}
+namespace ft {
+	class integral_printer {
+		public:
+			template <typename T>
+			void out(T const & val, std::ostream & o = std::cout) {
+				o << val;
+			}
 
-template <typename T>
-std::string get_color(ft::node<T> *n) {
-	if (n->color == RED)
-		return P_RED;
-	return P_BLUE;
-}
+			template <typename T>
+			void out(T const & value, std::ostream & o = std::cout, typename ft::enable_if< !ft::is_integral<T>::value >::type* = NULL) {
+				(void)value;
+				o << "Type not printable!";
+			}
+	};
 
-template <typename T>
-std::string get_color_str(ft::node<T> *n) {
-	if (n->color == RED)
-		return "R";
-	return "B";
-}
+	template <typename key_printer>
+	class Tree_Printer {
+		private:
+			std::ostream	&_out;
+			key_printer 		_key_printer;
 
-void print_branch(std::string b, std::ostream & o) {
-	if (o == std::cout) o << "\033[1;" << P_WHITE << "m";
-	o << b;
-	if (o == std::cout) o << "\033[0m";
-}
+		public:
+			Tree_Printer(std::ostream & o = std::cout, key_printer const & k = integral_printer()) : _out(o), _key_printer(k) { }
 
+			template <class T, class U, class V, class W>
+			void print(ft::B_TREE<T, U, V, W> & t) {
+				this->print(t.root());
+			}
 
-template <typename T>
-void print_colored_value(ft::node<T> *n, std::ostream & o, void (*printer)(T&, std::ostream &)) {
-	if (n) {
-		if (o == std::cout) o << "\033[1;" << get_color(n) << "m";
-		else o << get_color_str(n) << ":";
-		printer(n->value, o);
-		if (o == std::cout) o << "\033[0m";
-		o << std::endl;
-	}
-	else
-		o << "." << std::endl;
-}
+			template <typename pair>
+			void print(ft::node<pair> *n, int level = 0) {
+				this->print_node(n, level);
 
-template <typename T>
-void print_node(ft::node<T> *n, std::ostream & o, void (*printer)(T&, std::ostream &), int level) {
-	if (level == 0) {
-		print_colored_value(n, o, printer);
-		return;
-	}
-	
-	while (level > 1) {
-		print_branch("|   ", o);
-		level--;
-	}
+				if (n && (n->right || n->left)) {
+					this->print(n->right, level + 1);
+					this->print(n->left, level + 1);
+				}
+			}
 
-	print_branch("|___", o);
-	print_colored_value(n, o, printer);
-}
+			template <typename T>
+			void print_node(ft::node<T> *n, int level) {
+				if (level == 0) {
+					this->print_colored_value(n);
+					return;
+				}
+				
+				while (level > 1) {
+					this->print_branch("|   ");
+					level--;
+				}
 
-template <typename T>
-void print_tree(ft::node<T> *n, std::ostream & o = std::cout, void (*printer)(T&, std::ostream &) = &integral_printer, int level = 0) {
-	print_node(n, o, printer, level);
+				this->print_branch("|___");
+				this->print_colored_value(n);
+			}
 
-	if (n && (n->right || n->left)) {
-		print_tree(n->right, o, printer, level + 1);
-		print_tree(n->left, o, printer, level + 1);
-	}
-}
+			template <typename T>
+			void print_colored_value(ft::node<T> *n) {
+				if (n) {
+					if (_out == std::cout) _out << "\033[1;" << get_color(n) << "m";
+					else _out << this->get_color_str(n) << ":";
+					this->_key_printer.out(n->value.first, _out);
+					if (_out == std::cout) _out << "\033[0m";
+					_out << std::endl;
+				}
+				else
+					_out << "." << std::endl;
+			}
 
-template <typename T, class U, class V >
-void print_tree(ft::B_TREE<T, U, V> & t, std::ostream & o = std::cout, void (*printer)(T&, std::ostream &) = &integral_printer) {
-	print_tree(t.root(), o, printer);
+			void print_branch(std::string b) {
+				if (_out == std::cout) _out << "\033[1;" << P_WHITE << "m";
+				_out << b;
+				if (_out == std::cout) _out << "\033[0m";
+			}
+
+			template <typename T>
+			std::string get_color(ft::node<T> *n) {
+				if (n->color == RED)
+					return P_RED;
+				return P_BLUE;
+			}
+
+			template <typename T>
+			std::string get_color_str(ft::node<T> *n) {
+				if (n->color == RED)
+					return "R";
+				return "B";
+			}
+	};
 }
 
 #endif
