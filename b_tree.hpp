@@ -42,8 +42,7 @@ namespace ft {
 				if (current->right)
 					_move_destroy(current->right);
 				
-				_M_alloc.destroy(current);
-				_M_alloc.deallocate(current, 1);
+				this->_delete(current);
 			}
 
 			node *root() { return this->_root; }
@@ -95,7 +94,7 @@ namespace ft {
 					return;
 			 	} 
 				
-				if (n->parent == BLACK)
+				if (n->parent->color == BLACK)
 					return;
 
 				if (n->grandparent() == NULL)
@@ -138,14 +137,14 @@ namespace ft {
 				{
 					Debug::Log << "DETECTING LR CASE" << std::endl;
 					this->_rotate_left(p);
-					this->_rotate_left(g);
+					this->_rotate_right(g);
 					this->_swap_colors(g, n);
 				}
 				else if (p == g->right && n == p->left)
 				{
 					Debug::Log << "DETECTING RL CASE" << std::endl;
 					this->_rotate_right(p);
-					this->_rotate_right(g);
+					this->_rotate_left(g);
 					this->_swap_colors(g, n);
 				}
 				else
@@ -167,6 +166,9 @@ namespace ft {
 				n->right = vassal;
 				if (vassal)
 					vassal->parent = n;
+
+				this->_print_tree();
+				
 			}
 
 			void _rotate_right(node *n) {
@@ -180,6 +182,8 @@ namespace ft {
 				n->left = vassal;
 				if (vassal)
 					vassal->parent = n;
+
+				this->_print_tree();
 			}
 
 			void _replace(node *n, node *r) {
@@ -211,6 +215,34 @@ namespace ft {
 				int temp = n1->color;
 				n1->color = n2->color;
 				n2->color = temp;
+			}
+
+			void _delete(node *n) {
+				_M_alloc.destroy(n);
+				_M_alloc.deallocate(n, 1);
+			}
+
+			void _delete_node(node *n) {
+				Debug::Log << "Deleting node" << std::endl;
+
+				if (!n->left && !n->right)
+					_delete_leaf(n);
+				else if (!n->left || !n->right)
+					_delete_one_child(n);
+				else
+					_delete_two_children(n);
+			}
+
+			void _delete_leaf(node *n) {
+				Debug::Log << "Deleting leaf" << std::endl;
+			}
+
+			void _delete_one_child(node *n) {
+				Debug::Log << "Deleting one child" << std::endl;
+			}
+
+			void _delete_two_children(node *n) {
+				Debug::Log << "Deleting two children" << std::endl;
 			}
 
 			void _print_tree() {

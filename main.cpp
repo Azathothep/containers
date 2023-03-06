@@ -19,14 +19,16 @@ int main() {
 
 	ft::B_TREE< m_pair, integral_key_compare< m_pair > > tree;
 
-	tree.insert( ft::make_pair(5, true) );
+	tree.insert( ft::make_pair(98, true) );
 	tree.insert( ft::make_pair(8, true) );
-	tree.insert( ft::make_pair(2, true) );
-	tree.insert( ft::make_pair(9, true) );
-	tree.insert( ft::make_pair(10, true) );
-	tree.insert( ft::make_pair(11, true) );
-	tree.insert( ft::make_pair(12, true) );
-	tree.insert( ft::make_pair(13, true) );
+	tree.insert( ft::make_pair(81, true) );
+	tree.insert( ft::make_pair(90, true) );
+	tree.insert( ft::make_pair(-2, true) );
+	tree.insert( ft::make_pair(23, true) );
+	tree.insert( ft::make_pair(20, true) );
+	tree.insert( ft::make_pair(52, true) );
+	tree.insert( ft::make_pair(99, true) );
+
 
 	print_tree(tree, std::cout, &ft::pair_printer<m_pair>);
 
