@@ -15,6 +15,10 @@ namespace ft {
 		#define 	PRINT_TREE _printer.print(*this)
 		#define		GET_COLOR(n) (char)(((node *)n == NULL) ? BLACK_NODE : n->color)
 
+		#define		LEFT_CHILD true
+		#define		RIGHT_CHILD false
+		#define		CHILD_STATUS(n) (bool)((node *)n == (node *)n->parent->left)
+
 		public:
 			typedef Key									key_type;
 			typedef T									value_type;
@@ -44,7 +48,8 @@ namespace ft {
 			}
 
 			~B_TREE() {
-				this->_move_destroy(this->_root);
+				if (this->_root)
+					this->_move_destroy(this->_root);
 			}
 
 			void _move_destroy(node *current) {
@@ -93,11 +98,42 @@ namespace ft {
 			}
 
 		private:
+
+		/* #region utils */
+
+			void _replace(node *n, node *r) {
+				node *p = n->parent;
+				
+				if (p == NULL)
+					this->_root = r;
+				else if (n == p->left)
+					p->left = r;
+				else if (n == p->right)
+					p->right = r;
+
+				if (r) r->parent = p;
+			}
+
+			void _swap_colors(node *n1, node *n2) {
+				int temp = n1->color;
+				n1->color = n2->color;
+				n2->color = temp;
+			}
+
+			void _delete_allocated(node *n) {
+				_M_alloc.destroy(n);
+				_M_alloc.deallocate(n, 1);
+			}
+
 			node *_create_node(pair_type const & val) {
 				node *n = _M_alloc.allocate(1);
 				_M_alloc.construct(n, node(val));
 				return n;
 			}
+
+		/* #endregion */
+
+		/* #region insertion */
 
 			void _move_insert(node **current, node *insert, node *parent = NULL) {
 				if (*current == NULL) {
@@ -186,6 +222,10 @@ namespace ft {
 				PRINT_TREE;
 			}
 
+		/* #endregion */
+
+		/* #region rotations */
+
 			void _rotate_left(node *n) {
 				Debug::Log << "Map: rotate left" << std::endl;
 				node *traitor = n->right;
@@ -216,29 +256,9 @@ namespace ft {
 				PRINT_TREE;
 			}
 
-			void _replace(node *n, node *r) {
-				node *p = n->parent;
-				
-				if (p == NULL)
-					this->_root = r;
-				else if (n == p->left)
-					p->left = r;
-				else if (n == p->right)
-					p->right = r;
+		/* #endregion */
 
-				if (r) r->parent = p;
-			}
-
-			void _swap_colors(node *n1, node *n2) {
-				int temp = n1->color;
-				n1->color = n2->color;
-				n2->color = temp;
-			}
-
-			void _delete_allocated(node *n) {
-				_M_alloc.destroy(n);
-				_M_alloc.deallocate(n, 1);
-			}
+		/* #region erasure */
 
 			void _erase_node(node *n) {
 				char originalColor = n->color;
@@ -324,48 +344,49 @@ namespace ft {
 				}
 			}
 
+			/* #region double black */
+
 			void _solve_double_black(node *db) {
 				Debug::Log << "SOLVING DOUBLE BLACK ON: " << KEY(db) << std::endl;
 				PRINT_TREE;
 
 				node *sibling = db->sibling();
-				bool left = (db == db->parent->left);
+				bool child_status = CHILD_STATUS(db);
 
 				if (sibling == NULL) // check for this case
 					return;
 
 				if (GET_COLOR(sibling) == RED_NODE)
-					this->_red_sibling_case(db);
+					this->_red_sibling_case(db, child_status);
 				else {
-					if (left) {
-						if (GET_COLOR(sibling->right) == BLACK_NODE && GET_COLOR(sibling->left) == BLACK_NODE)
-							this->_black_family_case(db);
-						else if (GET_COLOR(sibling->right) == BLACK_NODE)
-								this->_close_nephew_red_case(db);
-						this->_far_nephew_red_case(db);
-					} else {
-						if (GET_COLOR(sibling->right) == BLACK_NODE && GET_COLOR(sibling->left) == BLACK_NODE)
-							this->_black_family_case(db);
-						else if (GET_COLOR(sibling->left) == BLACK_NODE)
-							this->_close_nephew_red_case(db);
-						this->_far_nephew_red_case(db);
+					if (GET_COLOR(sibling->right) == BLACK_NODE && GET_COLOR(sibling->left) == BLACK_NODE)
+						this->_black_family_case(db);
+					else {
+						if (child_status == LEFT_CHILD) {
+							if (GET_COLOR(sibling->right) == BLACK_NODE)
+								this->_close_nephew_red_case(db, child_status);
+							this->_far_nephew_red_case(db, child_status);
+						} else {
+							if (GET_COLOR(sibling->left) == BLACK_NODE)
+								this->_close_nephew_red_case(db, child_status);
+							this->_far_nephew_red_case(db, child_status);
+						}
 					}
 				}
 			}
 
-			void _red_sibling_case(node *db) {
+			void _red_sibling_case(node *db, bool child_status) {
 				Debug::Log << "ENTERING RED SIBLING CASE" << std::endl;
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
-				bool left = (db == parent->left);
-
 				this->_swap_colors(sibling, parent);
 
-				if (left)
+				if (child_status == LEFT_CHILD)
 					this->_rotate_left(parent);
 				else
 					this->_rotate_right(parent);
+
 				this->_solve_double_black(db);
 			}
 
@@ -381,11 +402,11 @@ namespace ft {
 					this->_solve_double_black(parent);
 			}
 
-			void _close_nephew_red_case(node *db) {
+			void _close_nephew_red_case(node *db, bool child_status) {
 				Debug::Log << "ENTERING CLOSE NEPHEW RED CASE" << std::endl;
 				node *sibling = db->sibling();
 
-				if (db == db->parent->left)
+				if (child_status == LEFT_CHILD)
 				{
 					this->_swap_colors(sibling, sibling->left);
 					this->_rotate_right(sibling);
@@ -396,17 +417,15 @@ namespace ft {
 				}
 			}
 
-			void _far_nephew_red_case(node *db) {
+			void _far_nephew_red_case(node *db, bool child_status) {
 				Debug::Log << "ENTERING FAR NEWPHEW RED CASE" << std::endl;
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
-				bool left = (db == parent->left);
-
 				sibling->color = parent->color;
 				parent->color = BLACK_NODE;
 
-				if (left) {
+				if (child_status == LEFT_CHILD) {
 					sibling->right->color = BLACK_NODE;
 					this->_rotate_left(parent);
 				}
@@ -415,7 +434,13 @@ namespace ft {
 					this->_rotate_right(parent);
 				}
 			}
+			
+			/* #endregion */
+		
+		/* #endregion */
 	};
+
+	
 }
 
 

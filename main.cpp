@@ -8,6 +8,7 @@
 #include "ft/pair.hpp"
 #include "b_tree.hpp"
 #include "print_tree.hpp"
+#include "map.hpp"
 
 int main() {
 	ft::B_TREE< int, char > tree;
@@ -34,13 +35,20 @@ int main() {
 
 	printer.print(tree);
 
-	int key = 5;
-
-	tree.erase(key);
+	tree.erase(5);
+	tree.erase(2);
+	tree.erase(0);
+	tree.erase(23);
+	tree.erase(98);
+	tree.erase(99);
+	tree.erase(19);
+	tree.erase(81);
 
 	std::cout << std::endl << "After erasures" << std::endl;
 
 	printer.print(tree);
+
+	ft::map<int, bool> my_map;
 
 	return 0;
 }

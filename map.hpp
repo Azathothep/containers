@@ -12,37 +12,37 @@ namespace ft
 
 	/* #region map_iterator */
 
-	#define IS_CONST true
+	// #define IS_CONST true
 
-	template <typename T, bool constness>
-	struct is_const;
+	// template <typename T, bool constness>
+	// struct is_const;
 
-	template <typename T>
-	struct is_const<T, false> {
-		typedef T type;
-	};
+	// template <typename T>
+	// struct is_const<T, false> {
+	// 	typedef T type;
+	// };
 
-	template <typename T>
-	struct is_const<T, true> {
-		typedef const T type;
-	};
+	// template <typename T>
+	// struct is_const<T, true> {
+	// 	typedef const T type;
+	// };
 
-	template <typename T, bool constness = false>
-	class map_iterator {
+	// template <typename T, bool constness = false>
+	// class map_iterator {
 	
-	public:
-		typedef typename std::forward_iterator_tag 									iterator_category;
-		typedef typename std::ptrdiff_t 											difference_type;
-		typedef typename is_const<T, constness>::type								value_type;
-		typedef	value_type*														 	pointer;
-		typedef value_type&														 	reference;
-	};
+	// public:
+	// 	typedef typename std::forward_iterator_tag 									iterator_category;
+	// 	typedef typename std::ptrdiff_t 											difference_type;
+	// 	typedef typename is_const<T, constness>::type								value_type;
+	// 	typedef	value_type*														 	pointer;
+	// 	typedef value_type&														 	reference;
+	// };
 
 	/* #endregion */
 
 	/* #region map */
 
-	template <class Key, class T, class Compare = less<Key>, class Alloc = allocator<ft::pair<const Key, T> > >
+	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::pair< const Key, T > > >
 	class map {
 
 	/* #region typedefs */
@@ -61,61 +61,74 @@ namespace ft
 		typedef typename allocator_type::pointer 						pointer;
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
-		typedef list_iterator<T>										iterator;
-		typedef list_iterator<T, true>									const_iterator;
-		typedef ft::reverse_iterator<iterator>							reverse_iterator;
-		typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
+		//typedef list_iterator<T>										iterator;
+		//typedef list_iterator<T, true>									const_iterator;
+		//typedef ft::reverse_iterator<iterator>							reverse_iterator;
+		//typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
 
-		typedef typename ft::iterator_traits<iterator>::difference_type	difference_type;
+		//typedef typename ft::iterator_traits<iterator>::difference_type	difference_type;
 		typedef typename allocator_type::size_type						size_type;
 
 	/* #endregion */
 
 	private:
-		ft::B_TREE _M_tree;
+		key_compare			_M_comp;
+		allocator_type		_M_alloc;
+
+		ft::B_TREE<key_type, mapped_type, key_compare> _M_tree;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) { }
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(_M_comp) {
+			_M_comp = comp;
+			_M_alloc = alloc;
+		}
 
 		template <class InputIterator>
-		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : root(NULL) { }
+		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(_M_comp) {
+			(void)first;
+			(void)last;
+			_M_comp = comp;
+			_M_alloc = alloc;
+		}
 
-		map (const map& x) {
+		map (const map& x) : _M_tree(_M_comp) {
 			*this = x;
 		}
 
 		~map() {}
 
-		map& operator= (const map& x) { }
+		map& operator= (const map& x) {
+			return *this;
+		}
 
 	/* #endregion */
 
 	/* #region iterators */
 
-	public:
-		iterator begin() { }
-		const_iterator begin() const { }
-		const_iterator cbegin() const { }
-		iterator end() { }
-		const_iterator end() const { }
-		const_iterator cend() const { }
-		reverse_iterator rbegin() const { }
-		const_reverse_iterator crbegin() const { }
-		reverse_iterator rend() const { }
-		const_reverse_iterator crend() const { }
+	// public:
+	// 	iterator begin() { }
+	// 	const_iterator begin() const { }
+	// 	const_iterator cbegin() const { }
+	// 	iterator end() { }
+	// 	const_iterator end() const { }
+	// 	const_iterator cend() const { }
+	// 	reverse_iterator rbegin() const { }
+	// 	const_reverse_iterator crbegin() const { }
+	// 	reverse_iterator rend() const { }
+	// 	const_reverse_iterator crend() const { }
 
 	/* #endregion */
 
 	/* #region capacity */
 
 	public:
-		bool empty const() { }
+		bool empty() const;
 
-		size_type size() const { }
+		size_type size() const;
 
-		size_type max_size() const { }
+		size_type max_size() const;
 
 	/* #endregion */
 
@@ -132,27 +145,27 @@ namespace ft
 
 	/* #region modifiers */
 
-	public:
-		ft::pair<iterator, bool> insert (const value_type& val) {
-			// _tree.insert();
+	// public:
+	// 	ft::pair<iterator, bool> insert (const value_type& val) {
+	// 		// _tree.insert();
 
 			
-		}
+	// 	}
 
-		iterator insert (iterator position, const value_type& val) { }
+	// 	iterator insert (iterator position, const value_type& val) { }
 
-		template <class InputIterator>
-		void insert (InputIterator first, InputIterator last) { }
+	// 	template <class InputIterator>
+	// 	void insert (InputIterator first, InputIterator last) { }
 
-		void erase (iterator position) { }
+	// 	void erase (iterator position) { }
 
-		size_type erase (const key_type& k) { }
+	// 	size_type erase (const key_type& k) { }
 
-		void erase (iterator first, iterator last) { }
+	// 	void erase (iterator first, iterator last) { }
 
-		void swap (map& x) { }
+	// 	void swap (map& x) { }
 
-		void clear() { }
+	// 	void clear() { }
 
 	/* #endregion */
 
@@ -161,36 +174,37 @@ namespace ft
 	public:
 		key_compare key_comp() const { }
 
-		value_compare value_comp() const { }
+		//value_compare value_comp() const { }
 
 	/* #endregion */
 
 	/* #region operations */
 
-	public:
-		iterator find (const key_type& k) { }
+	// public:
+	// 	iterator find (const key_type& k) { }
 
-		const_iterator find (const key_type& k) const { }
+	// 	const_iterator find (const key_type& k) const { }
 
-		size_type count (const key_type& k) const { }
+	// 	size_type count (const key_type& k) const { }
 
-		iterator lower_bound (const key_type& k) { }
+	// 	iterator lower_bound (const key_type& k) { }
 
-		const_iterator lower_bound (const key_type& k) const { }
+	// 	const_iterator lower_bound (const key_type& k) const { }
 
-		iterator upper_bound (const key_type& k) { }
+	// 	iterator upper_bound (const key_type& k) { }
 
-		const_iterator upper_bound (const key_type& k) const { }
+	// 	const_iterator upper_bound (const key_type& k) const { }
 
-		ft::pair<const_iterator, const_iterator> equal_range (const key_type& k) const { }
+	// 	ft::pair<const_iterator, const_iterator> equal_range (const key_type& k) const { }
 
-		ft::pair<iterator, iterator> equal_range (const key_type& k) { }
+	// 	ft::pair<iterator, iterator> equal_range (const key_type& k) { }
 
 	/* #endregion */
 
 	public:
 		allocator_type get_allocator() const { }
-	}
+
+	};
 
 	/* #endregion */
 }
