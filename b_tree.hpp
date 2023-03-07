@@ -263,11 +263,15 @@ namespace ft {
 			void _erase_node(node *n) {
 				char originalColor = n->color;
 
-				node *heir = this->_delete_node(n);
+				node *heir = this->_delete_node(n, &originalColor);
 				
+				Debug::Log << "OriginalColor is " << (int)originalColor << std::endl;
 				if (originalColor == BLACK_NODE) {
 					if (GET_COLOR(heir) == RED_NODE)
+					{
+						Debug::Log << "PAINTING RED HEIR " << KEY(heir) << " IN BLACK" << std::endl;
 						heir->color = BLACK_NODE;
+					}
 					else if (heir == this->root())
 						heir->color = BLACK_NODE;
 					else
@@ -281,14 +285,14 @@ namespace ft {
 				PRINT_TREE;
 			}
 
-			node *_delete_node(node *n) {
+			node *_delete_node(node *n, char *originalColor) {
 				Debug::Log << "Deleting node" << std::endl;
 
 				if (!n->left && !n->right)
 					return _delete_leaf(n);
 				else if (!n->left || !n->right)
 					return _delete_one_child(n);
-				return _delete_two_children(n);
+				return _delete_two_children(n, originalColor);
 			}
 
 			node *_delete_leaf(node *n) {
@@ -310,7 +314,7 @@ namespace ft {
 				return child;
 			}
 
-			node *_delete_two_children(node *n) {
+			node *_delete_two_children(node *n, char *originalColor) {
 				Debug::Log << "Deleting two children" << std::endl;
 				node *subnode = n->left; // n->right
 
@@ -319,14 +323,20 @@ namespace ft {
 				Debug::Log << "Subnode key: " << KEY(subnode) << std::endl;
 
 				node *heir = subnode->left; // subnode->right
+				if (heir == NULL)
+					heir = NIL;
 				this->_replace(subnode, heir);
 
 				this->_replace(n, subnode);
 				this->_inherit(n, subnode);
+				
+				*originalColor = subnode->color; // TO VERIFY
+				Debug::Log << "Replacing subnode color by " << (int)n->color << std::endl;
+				subnode->color = n->color;
 
 				this->_delete_allocated(n);
 
-				return subnode;
+				return heir; //is that ok ?
 			}
 
 			void _inherit(node *n, node *heir) {

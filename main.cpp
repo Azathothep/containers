@@ -35,14 +35,10 @@ int main() {
 
 	printer.print(tree);
 
-	tree.erase(5);
-	tree.erase(2);
-	tree.erase(0);
-	tree.erase(23);
-	tree.erase(98);
-	tree.erase(99);
-	tree.erase(19);
 	tree.erase(81);
+	tree.erase(52);
+	tree.erase(23);
+	tree.erase(20);
 
 	std::cout << std::endl << "After erasures" << std::endl;
 
