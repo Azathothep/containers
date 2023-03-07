@@ -245,12 +245,14 @@ namespace ft {
 
 				node *heir = this->_delete_node(n);
 				
-				if (originalColor == RED_NODE || GET_COLOR(heir) == RED_NODE)
-					heir->color = BLACK_NODE;
-				else if (heir == this->root())
-					heir->color = BLACK_NODE;
-				else
-					this->_solve_double_black(heir);
+				if (originalColor == BLACK_NODE) {
+					if (GET_COLOR(heir) == RED_NODE)
+						heir->color = BLACK_NODE;
+					else if (heir == this->root())
+						heir->color = BLACK_NODE;
+					else
+						this->_solve_double_black(heir);
+				}
 
 				if (heir == NIL)
 					this->_replace(heir, NULL);
@@ -290,13 +292,13 @@ namespace ft {
 
 			node *_delete_two_children(node *n) {
 				Debug::Log << "Deleting two children" << std::endl;
-				node *subnode = n->right;
+				node *subnode = n->left; // n->right
 
-				while (subnode->left)
-					subnode = subnode->left;
+				while (subnode->right) // subnode->left
+					subnode = subnode->right; // subnode->left
 				Debug::Log << "Subnode key: " << KEY(subnode) << std::endl;
 
-				node *heir = subnode->right;
+				node *heir = subnode->left; // subnode->right
 				this->_replace(subnode, heir);
 
 				this->_replace(n, subnode);
@@ -313,12 +315,12 @@ namespace ft {
 				
 				if (heir != n->right) {
 					heir->right = n->right;
-					heir->right->parent = heir;
+					if (heir->right) heir->right->parent = heir; // check
 				}
 
 				if (heir != n->left) {
 					heir->left = n->left;
-					heir->left->parent = heir;
+					if (heir->left) heir->left->parent = heir;
 				}
 			}
 
@@ -327,6 +329,7 @@ namespace ft {
 				PRINT_TREE;
 
 				node *sibling = db->sibling();
+				bool left = (db == db->parent->left);
 
 				if (sibling == NULL) // check for this case
 					return;
@@ -334,15 +337,19 @@ namespace ft {
 				if (GET_COLOR(sibling) == RED_NODE)
 					this->_red_sibling_case(db);
 				else {
-					if (GET_COLOR(sibling->right) == BLACK_NODE)
-					{
-						if (GET_COLOR(sibling->left) == BLACK_NODE)
+					if (left) {
+						if (GET_COLOR(sibling->right) == BLACK_NODE && GET_COLOR(sibling->left) == BLACK_NODE)
 							this->_black_family_case(db);
-						else
-							this->_left_nephew_red_case(db);
+						else if (GET_COLOR(sibling->right) == BLACK_NODE)
+								this->_close_nephew_red_case(db);
+						this->_far_nephew_red_case(db);
+					} else {
+						if (GET_COLOR(sibling->right) == BLACK_NODE && GET_COLOR(sibling->left) == BLACK_NODE)
+							this->_black_family_case(db);
+						else if (GET_COLOR(sibling->left) == BLACK_NODE)
+							this->_close_nephew_red_case(db);
+						this->_far_nephew_red_case(db);
 					}
-					else
-						this->_right_nephew_red_case(db);
 				}
 			}
 
@@ -351,8 +358,14 @@ namespace ft {
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
+				bool left = (db == parent->left);
+
 				this->_swap_colors(sibling, parent);
-				this->_rotate_left(parent);
+
+				if (left)
+					this->_rotate_left(parent);
+				else
+					this->_rotate_right(parent);
 				this->_solve_double_black(db);
 			}
 
@@ -368,23 +381,39 @@ namespace ft {
 					this->_solve_double_black(parent);
 			}
 
-			void _left_nephew_red_case(node *db) {
-				Debug::Log << "ENTERING LEFT NEPHEW RED CASE" << std::endl;
+			void _close_nephew_red_case(node *db) {
+				Debug::Log << "ENTERING CLOSE NEPHEW RED CASE" << std::endl;
 				node *sibling = db->sibling();
 
-				this->_swap_colors(sibling, sibling->left);
-				this->_rotate_right(sibling);
+				if (db == db->parent->left)
+				{
+					this->_swap_colors(sibling, sibling->left);
+					this->_rotate_right(sibling);
+				}
+				else {
+					this->_swap_colors(sibling, sibling->right);
+					this->_rotate_left(sibling);
+				}
 			}
 
-			void _right_nephew_red_case(node *db) {
-				Debug::Log << "ENTERING RIGHT NEWPHEW RED CASE" << std::endl;
+			void _far_nephew_red_case(node *db) {
+				Debug::Log << "ENTERING FAR NEWPHEW RED CASE" << std::endl;
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
+				bool left = (db == parent->left);
+
 				sibling->color = parent->color;
 				parent->color = BLACK_NODE;
-				sibling->right->color = BLACK_NODE;
-				this->_rotate_left(parent);
+
+				if (left) {
+					sibling->right->color = BLACK_NODE;
+					this->_rotate_left(parent);
+				}
+				else {
+					sibling->left->color = BLACK_NODE;
+					this->_rotate_right(parent);
+				}
 			}
 	};
 }
