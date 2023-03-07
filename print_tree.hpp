@@ -97,14 +97,14 @@ namespace ft {
 
 			template <typename T>
 			std::string get_color(ft::node<T> *n) {
-				if (n->color == RED)
+				if (n->color == RED_NODE)
 					return P_RED;
 				return P_BLUE;
 			}
 
 			template <typename T>
 			std::string get_color_str(ft::node<T> *n) {
-				if (n->color == RED)
+				if (n->color == RED_NODE)
 					return "R";
 				return "B";
 			}

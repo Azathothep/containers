@@ -1,20 +1,22 @@
 #ifndef NODE_HPP
 # define NODE_HPP
 
-# define BLACK false
-# define RED true
+# define BLACK_NODE 0
+# define RED_NODE 1
 
 namespace ft {
 
 	template <typename T>
 	struct node {
-		bool color;
+		char color;
 		T value;
-		struct node * parent;
-		struct node * right;
-		struct node * left;
+		struct node *parent;
+		struct node *right;
+		struct node *left;
 
-		node(T const & v) : color(RED), value(v), parent(NULL), right(NULL), left(NULL) { }
+		node() : color(BLACK_NODE), parent(NULL), right(NULL), left(NULL) { }
+
+		node(T const & v) : color(RED_NODE), value(v), parent(NULL), right(NULL), left(NULL) { }
 
 		node *grandparent() {
 			if (this->parent)
@@ -30,6 +32,15 @@ namespace ft {
 				return this->grandparent()->right;
 			else
 				return this->grandparent()->left;
+		}
+
+		node *sibling() {
+			if (this->parent == NULL)
+				return NULL;
+
+			if (this == this->parent->left)
+				return this->parent->right;
+			return this->parent->left;
 		}
 	};
 }
