@@ -19,6 +19,9 @@
 namespace ft {
 	template <class Key, class T, class Compare, class Alloc>
 	class B_TREE;
+
+	template <class Key, class T, class Compare, class Alloc>
+	class map;
 }
 
 namespace ft {
@@ -48,6 +51,11 @@ namespace ft {
 			template <class T, class U, class V, class W>
 			void print(ft::B_TREE<T, U, V, W> & t) {
 				this->print(t.root());
+			}
+
+			template <class T, class U, class V, class W>
+			void print(ft::map<T, U, V, W> & m) {
+				this->print(m.root());
 			}
 
 			template <typename pair>

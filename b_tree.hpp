@@ -3,12 +3,13 @@
 #ifndef B_TREE_HPP
 # define B_TREE_HPP
 
+# include "ft/pair.hpp"
 # include "node.hpp"
 # include "print_tree.hpp"
 
 namespace ft {
 
-	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::node< ft::pair<Key, T> > > >
+	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::node< ft::pair<const Key, T> > > >
 	class B_TREE {
 		#define		KEY(n) ((node *)n)->value.first
 		#define		NIL &(this->_nil)
@@ -21,26 +22,27 @@ namespace ft {
 
 		public:
 			typedef Key									key_type;
-			typedef T									value_type;
-			typedef ft::pair< key_type, value_type > 	pair_type;
+			typedef T									mapped_type;
+			typedef ft::pair< const key_type, mapped_type > 	value_type;
 			typedef Alloc 								allocator_type;
 			typedef Compare 							compare_type;
-			typedef typename ft::node< pair_type > 		node;
+			typedef typename ft::node< value_type > 		node;
 
 		private:
 			node 					*_root;
 			node					_nil;
+			node					_god;
 			allocator_type 			_M_alloc;
 			compare_type			_M_comp;
 
-			ft::Tree_Printer<ft::integral_printer> 		_printer;
+			ft::Tree_Printer<ft::integral_printer>		_printer;
 
 		public:
 			B_TREE(const compare_type &comp = compare_type()) : _root(NULL), _printer(Debug::Log) {
 				this->_M_comp = comp;
 			}
 
-			B_TREE(pair_type const & val, const compare_type &comp = compare_type()) : _printer(Debug::Log) {
+			B_TREE(value_type const & val, const compare_type &comp = compare_type()) : _printer(Debug::Log) {
 				this->_M_comp = comp;
 
 				this->_root = this->_create_node(val);
@@ -61,25 +63,31 @@ namespace ft {
 				this->_delete_allocated(current);
 			}
 
-			node *root() { return this->_root; }
+			ft::node< value_type > *root() { return this->_root; }
 
-			pair_type const & get_pair(key_type const & key) {
+			value_type & get_pair(const key_type & key) {
+				Debug::Log << "Tree: get_pair with key " << key << std::endl;
+				
 				node *n = get_node(key, this->root());
 				
 				return n->value;
 			}
 
-			node *get_node(key_type const & key, node *n) {
+			node *get_node(key_type const & key, node *n = NULL) {
 				Debug::Log << "B_Tree: foward_node: checking node of key " << n->value.first << std::endl;
+
+				if(n == NULL)
+					n = this->root();
 
 				if (this->_M_comp(key, KEY(n))) // if key < n
 					return get_node(key, n->left);
 				else if (this->_M_comp(KEY(n), key)) // if key > n
 					return get_node(key, n->right);
+
 				return n;
 			}
 
-			void insert(pair_type const & val) {
+			void insert(value_type const & val) {
 				node * n = this->_create_node(val);
 
 				if (this->_root)
@@ -95,6 +103,38 @@ namespace ft {
 				node *n = get_node(key, this->root());
 
 				this->_erase_node(n);
+			}
+
+			node *smallest() {
+				node *n = this->root();
+
+				if (n == NULL)
+					return NULL;
+				
+				if (n->left)
+				{
+					n = n->left;
+					while (n->left)
+						n = n->left;
+				}
+
+				return n;
+			}
+
+			node *biggest() {
+				node *n = this->root();
+
+				if (n == NULL)
+					return NULL;
+
+				if (n->right)
+				{
+					n = n->right;
+					while (n->right)
+						n = n->right;
+				}
+
+				return n;
 			}
 
 		private:
@@ -125,7 +165,7 @@ namespace ft {
 				_M_alloc.deallocate(n, 1);
 			}
 
-			node *_create_node(pair_type const & val) {
+			node *_create_node(value_type const & val) {
 				node *n = _M_alloc.allocate(1);
 				_M_alloc.construct(n, node(val));
 				return n;
@@ -450,7 +490,6 @@ namespace ft {
 		/* #endregion */
 	};
 
-	
 }
 
 

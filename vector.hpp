@@ -11,25 +11,11 @@
 #include "ft/reverse_iterator.hpp"
 #include "ft/enable_if.hpp"
 #include "ft/is_integral.hpp"
+#include "ft/is_const.hpp"
 
 namespace ft
 {
-	#define IS_CONST true
-
-	template <typename T, bool constness>
-	struct is_const;
-
-	template <typename T>
-	struct is_const<T, false> {
-		typedef T type;
-	};
-
-	template <typename T>
-	struct is_const<T, true> {
-		typedef const T type;
-	};
-
-	/* #region iterators */
+	/* #region iterator */
 
 	template <typename T, bool constness = false>
 	class vector_iterator
@@ -197,7 +183,7 @@ namespace ft
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
 		typedef vector_iterator<T> 											iterator;
-		typedef vector_iterator<T, true>		 							const_iterator;
+		typedef vector_iterator<T, IS_CONST>		 							const_iterator;
 		typedef ft::reverse_iterator<iterator> 								reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator> 						const_reverse_iterator;
 		typedef typename ft::iterator_traits<iterator>::difference_type 	difference_type;

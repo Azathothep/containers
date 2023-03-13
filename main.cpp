@@ -11,40 +11,66 @@
 #include "map.hpp"
 
 int main() {
-	ft::B_TREE< int, char > tree;
+	ft::map<int, char> my_map;
 	ft::Tree_Printer< ft::integral_printer > printer;
 
-	tree.insert( ft::make_pair(98, 'a') );
-	tree.insert( ft::make_pair(8, 'b') );
-	tree.insert( ft::make_pair(81, 'c') );
-	tree.insert( ft::make_pair(90, 'd') );
-	tree.insert( ft::make_pair(5, 'e') );
-	tree.insert( ft::make_pair(23, 'f') );
-	tree.insert( ft::make_pair(20, 'g') );
-	tree.insert( ft::make_pair(52, 'h') );
-	tree.insert( ft::make_pair(99, 'i') );
-	tree.insert( ft::make_pair(2, 'j') );
-	tree.insert( ft::make_pair(91, 'k') );
-	tree.insert( ft::make_pair(105, 'k') );
-	tree.insert( ft::make_pair(18, 'k') );
-	tree.insert( ft::make_pair(0, 'k') );
-	tree.insert( ft::make_pair(19, 'k') );
-	tree.insert( ft::make_pair(1, 'k') );
+	my_map.insert( ft::make_pair(98, 'a') );
+	my_map.insert( ft::make_pair(8, 'b') );
+	my_map.insert( ft::make_pair(81, 'c') );
+	my_map.insert( ft::make_pair(90, 'd') );
+	my_map.insert( ft::make_pair(5, 'e') );
+	my_map.insert( ft::make_pair(23, 'f') );
+	my_map.insert( ft::make_pair(20, 'g') );
+	my_map.insert( ft::make_pair(52, 'h') );
+	my_map.insert( ft::make_pair(99, 'i') );
+	my_map.insert( ft::make_pair(2, 'j') );
+	my_map.insert( ft::make_pair(91, 'k') );
+	my_map.insert( ft::make_pair(105, 'l') );
+	my_map.insert( ft::make_pair(18, 'm') );
+	my_map.insert( ft::make_pair(1, 'n') );
+	my_map.insert( ft::make_pair(19, 'o') );
+	my_map.insert( ft::make_pair(0, 'p') );
+	my_map.insert( ft::make_pair(4, 'q') );
 
 	std::cout << "Before erasures" << std::endl;
 
-	printer.print(tree);
+	printer.print(my_map);
 
-	tree.erase(81);
-	tree.erase(52);
-	tree.erase(23);
-	tree.erase(20);
+	// my_map.erase(81);
+	// my_map.erase(52);
+	// my_map.erase(23);
+	// my_map.erase(20);
 
 	std::cout << std::endl << "After erasures" << std::endl;
 
-	printer.print(tree);
+	printer.print(my_map);
 
-	ft::map<int, bool> my_map;
+	ft::map<int, char>::iterator it = my_map.begin();
+	ft::map<int, char>::iterator end = it;
+	ft::map<int, char>::iterator ite = my_map.end();
+
+	for (; it != ite; it++)
+	{
+		end = it;
+		std::cout << std::endl << "iterator: " << (*it).first << ", " << (*it).second << std::endl;
+	}
+
+	std::cout << std::endl << "---------------------" << std::endl;
+
+	it = my_map.begin();
+
+	for (; end != it; end--)
+	{
+		std::cout << std::endl << "iterator: " << (*end).first << ", " << (*end).second << std::endl;
+	}
+
+	// ft::map<int, char>::reverse_iterator rit = my_map.rbegin();
+	// ft::map<int, char>::reverse_iterator rite = my_map.rend();
+
+	// for (; rit != rite; --rit)
+	// {
+	// 	std::cout << std::endl << "iterator: " << (*rit).first << ", " << (*rit).second << std::endl;
+	// }
 
 	return 0;
 }
