@@ -51,13 +51,16 @@ namespace ft
 					_m_node = _m_node->parent;
 
 					while (_prev == RIGHT_BRANCH) {
-						if (_m_node->parent == NULL || _m_node == _m_node->parent->left)
+						if (_m_node->parent == NULL)
+							break;
+
+						if (_m_node == _m_node->parent->left)
 							_prev = LEFT_BRANCH;
 						_m_node = _m_node->parent;
 					}
 				}
 			}
-			
+
 			return *this;
 		}
 
@@ -94,7 +97,10 @@ namespace ft
 					_m_node = _m_node->parent;
 
 					while (_prev == LEFT_BRANCH) {
-						if (_m_node->parent == NULL || _m_node == _m_node->parent->right)
+						if (_m_node->parent == NULL)
+							break;
+
+						if (_m_node == _m_node->parent->right)
 							_prev = RIGHT_BRANCH;
 						_m_node = _m_node->parent;
 					}
@@ -108,7 +114,7 @@ namespace ft
 			return _m_node->value;
 		}
 
-					map_iterator operator--(int) {
+		map_iterator operator--(int) {
 				map_iterator iterator = *this;
 				--(*this);
 				return iterator;
@@ -231,10 +237,10 @@ namespace ft
 		iterator begin() { return iterator(_M_tree.smallest() ); }
 	 	// const_iterator begin() const { return const_iterator(_M_tree.smallest() ); }
 	 	// const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
-		iterator end() { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-		const_iterator end() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-	 	const_iterator cend() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-	 	reverse_iterator rbegin() const { return reverse_iterator(++iterator(_M_tree.biggest(), RIGHT_BRANCH)); }
+		iterator end() { return iterator(_M_tree.biggest(), RIGHT_BRANCH); }
+		//const_iterator end() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
+	 	//const_iterator cend() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
+	 	reverse_iterator rbegin() const { return reverse_iterator(iterator(_M_tree.biggest(), RIGHT_BRANCH)); }
 		// const_reverse_iterator crbegin() const { }
 		reverse_iterator rend() const { return reverse_iterator(iterator(_M_tree.smallest())); }
 		const_reverse_iterator crend() const { }

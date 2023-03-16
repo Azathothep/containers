@@ -32,36 +32,32 @@ int main() {
 	my_map.insert( ft::make_pair(0, 'p') );
 	my_map.insert( ft::make_pair(4, 'q') );
 
-	std::cout << "Before erasures" << std::endl;
+	// std::cout << "Before erasures" << std::endl;
 
-	printer.print(my_map);
+	// printer.print(my_map);
 
 	// my_map.erase(81);
 	// my_map.erase(52);
 	// my_map.erase(23);
 	// my_map.erase(20);
 
-	std::cout << std::endl << "After erasures" << std::endl;
+	// std::cout << std::endl << "After erasures" << std::endl;
 
 	printer.print(my_map);
 
+	std::cout << "Requesting begin" << std::endl;
+
 	ft::map<int, char>::iterator it = my_map.begin();
-	ft::map<int, char>::iterator end = it;
+
+	std::cout << "Requesting end" << std::endl;
+
 	ft::map<int, char>::iterator ite = my_map.end();
+
+	std::cout << "Iterating..." << std::endl;
 
 	for (; it != ite; it++)
 	{
-		end = it;
 		std::cout << std::endl << "iterator: " << (*it).first << ", " << (*it).second << std::endl;
-	}
-
-	std::cout << std::endl << "---------------------" << std::endl;
-
-	it = my_map.begin();
-
-	for (; end != it; end--)
-	{
-		std::cout << std::endl << "iterator: " << (*end).first << ", " << (*end).second << std::endl;
 	}
 
 	// ft::map<int, char>::reverse_iterator rit = my_map.rbegin();

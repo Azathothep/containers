@@ -16,9 +16,9 @@ namespace ft {
 		#define 	PRINT_TREE _printer.print(*this)
 		#define		GET_COLOR(n) (char)(((node *)n == NULL) ? BLACK_NODE : n->color)
 
+		#define		CHILD_STATUS(n) (bool)((node *)n == (node *)n->parent->left)
 		#define		LEFT_CHILD true
 		#define		RIGHT_CHILD false
-		#define		CHILD_STATUS(n) (bool)((node *)n == (node *)n->parent->left)
 
 		public:
 			typedef Key									key_type;
@@ -30,8 +30,8 @@ namespace ft {
 
 		private:
 			node 					*_root;
-			node					_nil;
 			node					_god;
+			node					_nil;
 			allocator_type 			_M_alloc;
 			compare_type			_M_comp;
 
@@ -45,8 +45,7 @@ namespace ft {
 			B_TREE(value_type const & val, const compare_type &comp = compare_type()) : _printer(Debug::Log) {
 				this->_M_comp = comp;
 
-				this->_root = this->_create_node(val);
-				this->_root->color = BLACK_NODE;
+				this->insert(val);
 			}
 
 			~B_TREE() {
@@ -96,6 +95,9 @@ namespace ft {
 				{
 					this->_root = n;
 					this->_root->color = BLACK_NODE;
+
+					this->_god.left = this->_root;
+					this->_root->parent = &(this->_god);
 				}
 			}
 
@@ -121,21 +123,7 @@ namespace ft {
 				return n;
 			}
 
-			node *biggest() {
-				node *n = this->root();
-
-				if (n == NULL)
-					return NULL;
-
-				if (n->right)
-				{
-					n = n->right;
-					while (n->right)
-						n = n->right;
-				}
-
-				return n;
-			}
+			node *biggest() { return &this->_god; }
 
 		private:
 
@@ -144,7 +132,7 @@ namespace ft {
 			void _replace(node *n, node *r) {
 				node *p = n->parent;
 				
-				if (p == NULL)
+				if (p == NULL || p == &(this->_god))
 					this->_root = r;
 				else if (n == p->left)
 					p->left = r;
@@ -161,6 +149,8 @@ namespace ft {
 			}
 
 			void _delete_allocated(node *n) {
+				Debug::Log << "Deleting node of key " << n->value.first << std::endl;
+
 				_M_alloc.destroy(n);
 				_M_alloc.deallocate(n, 1);
 			}
@@ -206,7 +196,7 @@ namespace ft {
 				if (GET_COLOR(n->parent) == BLACK_NODE)
 					return;
 
-				if (n->grandparent() == NULL)
+				if (n->grandparent() == NULL || n->grandparent() == &(this->_god))
 					return;
 				
 				if (GET_COLOR(n->aunt()) == RED_NODE)
@@ -403,7 +393,7 @@ namespace ft {
 				node *sibling = db->sibling();
 				bool child_status = CHILD_STATUS(db);
 
-				if (sibling == NULL) // check for this case
+				if (sibling == NULL || db == this->_root) // check for this case
 					return;
 
 				if (GET_COLOR(sibling) == RED_NODE)
