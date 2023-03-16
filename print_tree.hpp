@@ -4,6 +4,7 @@
 # include <iostream>
 # include "ft/is_integral.hpp"
 # include "ft/enable_if.hpp"
+# include "ft/pair.hpp"
 
 # include "node.hpp"
 
@@ -119,4 +120,14 @@ namespace ft {
 	};
 }
 
+template <typename pair>
+void pair_printer(pair & value, std::ostream & o) {
+	o << value.first;
+}
+
+template <typename pair>
+void pair_printer(pair & value, std::ostream & o, typename ft::enable_if< !ft::is_integral<typename pair::first_type>::value >::type* = NULL) {
+	(void)value;
+	o << "type not printable!";
+}
 #endif

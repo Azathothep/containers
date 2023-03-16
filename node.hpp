@@ -4,10 +4,14 @@
 # define BLACK_NODE 0
 # define RED_NODE 1
 
+# define		LEFT_CHILD true
+# define		RIGHT_CHILD false
+
 namespace ft {
 
 	template <typename T>
 	struct node {
+
 		char color;
 		T value;
 		struct node *parent;
@@ -41,6 +45,10 @@ namespace ft {
 			if (this == this->parent->left)
 				return this->parent->right;
 			return this->parent->left;
+		}
+
+		bool child_status() {
+			return this == this->parent->left;
 		}
 	};
 }

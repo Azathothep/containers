@@ -302,14 +302,16 @@ namespace ft
 		/* #region iterators */
 
 		iterator begin() { return iterator(this->_M_data._M_start); }
-		const_iterator begin() const { return const_iterator(this->_M_data._M_start); }
+		const_iterator begin() const { return cbegin(); }
 		const_iterator cbegin() const { return const_iterator(this->_M_data._M_start); }
 		iterator end() { return iterator(this->_M_data._M_finish); }
-		const_iterator end() const { return const_iterator(this->_M_data._M_finish); }
+		const_iterator end() const { return cend(); }
 		const_iterator cend() const { return const_iterator(this->_M_data._M_finish); }
-		reverse_iterator rbegin() const { return reverse_iterator(iterator(this->_M_data._M_finish)); }
+		reverse_iterator rbegin() { return reverse_iterator(iterator(this->_M_data._M_finish)); }
+		const_reverse_iterator rbegin() const { return crbegin(); }
 		const_reverse_iterator crbegin() const { return const_reverse_iterator(this->cend()); };
-		reverse_iterator rend() const { return reverse_iterator(iterator(this->_M_data._M_start)); }
+		reverse_iterator rend() { return reverse_iterator(iterator(this->_M_data._M_start)); }
+		const_reverse_iterator rend() const { return crend(); }
 		const_reverse_iterator crend() const { return const_reverse_iterator(this->cbegin()); };
 
 		/* #endregion */

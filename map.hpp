@@ -4,6 +4,7 @@
 # include "ft/pair.hpp"
 # include "ft/make_pair.hpp"
 # include "ft/is_const.hpp"
+# include "ft/reverse_iterator.hpp"
 
 # include "node.hpp"
 # include "b_tree.hpp"
@@ -21,12 +22,12 @@ namespace ft
 	public:
 		typedef typename std::forward_iterator_tag 											iterator_category;
 		typedef typename std::ptrdiff_t 													difference_type;
-		typedef typename is_const<T, constness>::type								value_type;
+		typedef typename is_const<T, constness>::type										value_type;
 		typedef	value_type*																 	pointer;
 		typedef value_type&														 			reference;
 
 	private:
-		typedef typename ft::node< value_type >												node;
+		typedef typename ft::node< T >														node;
 
 		node 	*_m_node;
 		int		_prev;
@@ -35,7 +36,23 @@ namespace ft
 		map_iterator() { }
 		map_iterator(node *n, int comes_from = LEFT_BRANCH) : _m_node(n), _prev(comes_from) {}
 
+		template <bool c>
+		map_iterator(const map_iterator<T, c> &rhs) {
+			*this = rhs;
+		}
+
+		template <bool c>
+		map_iterator &operator=(const map_iterator<T, c> &rhs) {
+			this->_m_node = rhs.data();
+			this->_prev = rhs.prev();
+			return *this;
+		}
+
+		node *data() const { return this->_m_node; }
+		int  prev() const { return this->_prev; }
+
 		map_iterator &operator++() {
+			
 			if (_m_node->right) {
 				_m_node = _get_far_left(_m_node->right);
 				_prev = LEFT_BRANCH;
@@ -195,35 +212,39 @@ namespace ft
 	/* #endregion */
 
 	private:
-		key_compare			_M_comp;
-		allocator_type		_M_alloc;
-
 		ft::B_TREE<key_type, mapped_type, key_compare> _M_tree;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(_M_comp) {
-			_M_comp = comp;
-			_M_alloc = alloc;
-		}
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp, alloc) { }
 
 		template <class InputIterator>
-		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(_M_comp) {
+		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp, alloc) {
 			(void)first;
 			(void)last;
-			_M_comp = comp;
-			_M_alloc = alloc;
 		}
 
-		map (const map& x) : _M_tree(_M_comp) {
+		map (const map& x) : _M_tree(key_compare(), allocator_type()) {
 			*this = x;
 		}
 
-		~map() {}
+		~map() { }
 
-		map& operator= (const map& x) {
+		map& operator=(const map& x) {
+			if (this == &x)
+				return *this;
+
+			this->_range_copy(x.begin(), x.end());
+
 			return *this;
+		}
+
+		template <class InputIterator>
+		void _range_copy(InputIterator first, InputIterator last) {
+			for (; first != last; first++) {
+				this->insert(*first);
+			}
 		}
 
 	/* #endregion */
@@ -235,26 +256,34 @@ namespace ft
 
 	public:
 		iterator begin() { return iterator(_M_tree.smallest() ); }
-	 	// const_iterator begin() const { return const_iterator(_M_tree.smallest() ); }
-	 	// const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
-		iterator end() { return iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-		//const_iterator end() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-	 	//const_iterator cend() const { return ++iterator(_M_tree.biggest(), RIGHT_BRANCH); }
-	 	reverse_iterator rbegin() const { return reverse_iterator(iterator(_M_tree.biggest(), RIGHT_BRANCH)); }
-		// const_reverse_iterator crbegin() const { }
-		reverse_iterator rend() const { return reverse_iterator(iterator(_M_tree.smallest())); }
-		const_reverse_iterator crend() const { }
+	 	const_iterator begin() const { return cbegin(); }
+	 	const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
+		iterator end() { return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
+		const_iterator end() const { return cend(); }
+	 	const_iterator cend() const { return const_iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
+	 	reverse_iterator rbegin() { return reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
+		const_reverse_iterator rbegin() const { return crbegin(); }
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
+		reverse_iterator rend() { return reverse_iterator(iterator(_M_tree.smallest())); }
+		const_reverse_iterator rend() const { return crend(); }
+		const_reverse_iterator crend() const { return const_reverse_iterator(iterator(_M_tree.smallest())); }
 
 	/* #endregion */
 
 	/* #region capacity */
 
 	public:
-		bool empty() const;
+		bool empty() const {
+			return _M_tree.size == 0;
+		}
 
-		size_type size() const;
+		size_type size() const {
+			return _M_tree.size;
+		};
 
-		size_type max_size() const;
+		size_type max_size() const {
+			return _M_tree.get_allocator().max_size();
+		};
 
 	/* #endregion */
 
@@ -264,12 +293,28 @@ namespace ft
 		mapped_type& operator[] (const key_type& k) {
 			Debug::Log << "Map: operator[" << k << "]";
 
-			return _M_tree.get_pair(k).second;
+			ft::node< value_type > *n = _M_tree.get_node(k);
+
+			return n->value.second;
 		}
 
-		mapped_type& at (const key_type& k) { }
+		mapped_type& at (const key_type& k) {
+			ft::node< value_type > *n = _M_tree.get_node(k);
 
-		const mapped_type& at (const key_type& k) const { }
+			if (n == NULL)
+				throw std::out_of_range("map: at");
+
+			return n->value.second;
+		}
+
+		const mapped_type& at (const key_type& k) const {
+			ft::node< value_type > *n = _M_tree.get_node(k);
+
+				if (n == NULL)
+					throw std::out_of_range("map: at");
+
+			return n->value.second;
+		}
 
 	/* #endregion */
 
@@ -277,39 +322,56 @@ namespace ft
 
 	public:
 		ft::pair<iterator, bool> insert (const value_type& val) {
-			_M_tree.insert(val);
-			ft::pair<iterator, bool> result(iterator(), true);
-			// iterator pointing to the newly inserted element or to the element with an equivalent key in the map
-			// bool element is set to true if a new element was inserted or false if an equivalent key already existed
+			ft::pair< ft::node< value_type> *, bool > tree_pair = _M_tree.insert(val);
 
-			return result;
+			ft::pair<iterator, bool> map_pair(iterator(tree_pair.first), tree_pair.second);
+
+			return map_pair;
 		}
 
-	// 	iterator insert (iterator position, const value_type& val) { }
+		iterator insert (iterator position, const value_type& val) {
+			ft::node< value_type > *node = _M_tree.insert_from(val, (*position).first);
 
-	// 	template <class InputIterator>
-	// 	void insert (InputIterator first, InputIterator last) { }
+			return iterator(node);
+		}
 
-	// 	void erase (iterator position) { }
+		template <class InputIterator>
+		void insert (InputIterator first, InputIterator last, typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) {
+			this->_range_copy(first, last);
+		}
 
-	size_type erase (const key_type& k) {
-		_M_tree.erase(k);
+		void erase (iterator position) {
+			_M_tree.erase((*position).first);
+		}
 
-		return 0;
-	}
+		size_type erase (const key_type& k) {
+			if (_M_tree.erase(k))
+				return 1;
 
-	// 	void erase (iterator first, iterator last) { }
+			return 0;
+		}
 
-	// 	void swap (map& x) { }
+		void erase (iterator first, iterator last) {
+			for (; first != last; first++)
+				_M_tree.erase((*first).first);
+		}
 
-	// 	void clear() { }
+		void swap (map& x) {
+			map temp(x);
+			x = *this;
+			*this = temp;
+		}
+
+		void clear() {
+			_M_tree.destroy_all();
+		}
 
 	/* #endregion */
 
 	/* #region observers */
 
 	public:
-		key_compare key_comp() const { }
+		key_compare key_comp() const { return _M_tree.key_comp(); }
 
 		//value_compare value_comp() const { }
 
@@ -339,7 +401,7 @@ namespace ft
 	/* #endregion */
 
 	public:
-		allocator_type get_allocator() const { }
+		allocator_type get_allocator() const { return _M_tree.get_allocator(); }
 
 	};
 

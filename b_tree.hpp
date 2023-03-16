@@ -16,20 +16,19 @@ namespace ft {
 		#define 	PRINT_TREE _printer.print(*this)
 		#define		GET_COLOR(n) (char)(((node *)n == NULL) ? BLACK_NODE : n->color)
 
-		#define		CHILD_STATUS(n) (bool)((node *)n == (node *)n->parent->left)
-		#define		LEFT_CHILD true
-		#define		RIGHT_CHILD false
-
 		public:
-			typedef Key									key_type;
-			typedef T									mapped_type;
+			typedef Key											key_type;
+			typedef T											mapped_type;
 			typedef ft::pair< const key_type, mapped_type > 	value_type;
-			typedef Alloc 								allocator_type;
-			typedef Compare 							compare_type;
-			typedef typename ft::node< value_type > 		node;
+			typedef Alloc 										allocator_type;
+			typedef Compare 									compare_type;
+			typedef typename ft::node< value_type > 			node;
+
+			int						size;
 
 		private:
 			node 					*_root;
+			node					*_god_p;
 			node					_god;
 			node					_nil;
 			allocator_type 			_M_alloc;
@@ -38,18 +37,30 @@ namespace ft {
 			ft::Tree_Printer<ft::integral_printer>		_printer;
 
 		public:
-			B_TREE(const compare_type &comp = compare_type()) : _root(NULL), _printer(Debug::Log) {
+			B_TREE(const compare_type &comp = compare_type(), const allocator_type &alloc = allocator_type()) : size(0), _root(NULL), _printer(Debug::Log) {
 				this->_M_comp = comp;
+				this->_M_alloc = alloc;
+				this->_god_p = &this->_god;
 			}
 
-			B_TREE(value_type const & val, const compare_type &comp = compare_type()) : _printer(Debug::Log) {
+			B_TREE(value_type const & val, const compare_type &comp = compare_type()) : size(0), _printer(Debug::Log) {
 				this->_M_comp = comp;
+				this->_god_p = &this->_god;
 
 				this->insert(val);
 			}
 
 			~B_TREE() {
-				if (this->_root)
+				this->destroy_all();
+				size = 0;
+			}
+
+			compare_type key_comp() const { return _M_comp; }
+
+			allocator_type get_allocator() const { return _M_alloc; }
+
+			void destroy_all() {
+				if (this->root())
 					this->_move_destroy(this->_root);
 			}
 
@@ -62,21 +73,17 @@ namespace ft {
 				this->_delete_allocated(current);
 			}
 
-			ft::node< value_type > *root() { return this->_root; }
+			node *get_node(key_type const & key) {
+				node *n = this->root();
 
-			value_type & get_pair(const key_type & key) {
-				Debug::Log << "Tree: get_pair with key " << key << std::endl;
-				
-				node *n = get_node(key, this->root());
-				
-				return n->value;
+				return get_node(key, n);
 			}
 
-			node *get_node(key_type const & key, node *n = NULL) {
-				Debug::Log << "B_Tree: foward_node: checking node of key " << n->value.first << std::endl;
-
+			node *get_node(key_type const & key, node *n) {
 				if(n == NULL)
-					n = this->root();
+					return n;
+
+				Debug::Log << "B_Tree: foward_node: checking node of key " << n->value.first << std::endl;
 
 				if (this->_M_comp(key, KEY(n))) // if key < n
 					return get_node(key, n->left);
@@ -86,28 +93,67 @@ namespace ft {
 				return n;
 			}
 
-			void insert(value_type const & val) {
-				node * n = this->_create_node(val);
+			ft::pair< ft::node<value_type> *, bool> insert(value_type const & val) {
+				node *node = this->get_node(val.first, this->root());
+				ft::pair< ft::node<value_type> *, bool> return_pair;
+				
+				if (node) {
+					return_pair.first = node;
+					return_pair.second = false;
+					return return_pair;
+				}
+
+				node = this->_create_node(val);
 
 				if (this->_root)
-					this->_move_insert(&this->_root, n);
+					this->_move_insert(&this->_root, node);
 				else
 				{
-					this->_root = n;
+					this->_root = node;
 					this->_root->color = BLACK_NODE;
 
 					this->_god.left = this->_root;
 					this->_root->parent = &(this->_god);
 				}
+
+				size++;
+				
+				return_pair.first = node;
+				return_pair.second = true;
+
+				return return_pair;
 			}
 
-			void erase(key_type const & key) {
+			node *insert_from(value_type const & val, Key const & from) {
+				node *node = this->get_node(val.first, this->root());
+
+				if (node)
+					return node;
+				
+				node *insert = this->get_node(from, this->root());
+
+				if (insert && _M_comp(insert->value.first, from)) {
+					node = this->_create_node(val);
+					this->_move_insert(&node, insert, insert->parent);
+					return node;
+				}
+
+				return insert(val).first;
+			}
+
+			bool erase(key_type const & key) {
 				node *n = get_node(key, this->root());
 
+				if (n == NULL)
+					return false;
+
 				this->_erase_node(n);
+				size--;
+
+				return true;
 			}
 
-			node *smallest() {
+			node *smallest() const {
 				node *n = this->root();
 
 				if (n == NULL)
@@ -123,7 +169,11 @@ namespace ft {
 				return n;
 			}
 
-			node *biggest() { return &this->_god; }
+			node *past_the_end() const {
+				return this->_god_p;
+			}
+
+			node *root() const { return this->_root; }
 
 		private:
 
@@ -153,6 +203,7 @@ namespace ft {
 
 				_M_alloc.destroy(n);
 				_M_alloc.deallocate(n, 1);
+				n = NULL;
 			}
 
 			node *_create_node(value_type const & val) {
@@ -391,7 +442,7 @@ namespace ft {
 				PRINT_TREE;
 
 				node *sibling = db->sibling();
-				bool child_status = CHILD_STATUS(db);
+				bool child_status = db->child_status();
 
 				if (sibling == NULL || db == this->_root) // check for this case
 					return;
