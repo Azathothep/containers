@@ -48,21 +48,32 @@ namespace ft
 			return *this;
 		}
 
+		~map_iterator() {}
+
 		node *data() const { return this->_m_node; }
 		int  prev() const { return this->_prev; }
 
+		reference operator*() const {
+			return _m_node->value;
+		}
+
+		pointer operator->() const {
+			return &(_m_node->value);
+		}
+
 		map_iterator &operator++() {
-			
+			Debug::Log << "Iterator++ started with " << _m_node->value.first;
+
 			if (_m_node->right) {
 				_m_node = _get_far_left(_m_node->right);
 				_prev = LEFT_BRANCH;
-				if (_m_node == _m_node->parent->right)
+				if (_m_node->parent && _m_node == _m_node->parent->right)
 					_prev = RIGHT_BRANCH;
 			} else {
 				if (_prev == LEFT_BRANCH) {
 					_m_node = _m_node->parent;
 
-					if (_m_node == _m_node->parent->right)
+					if (_m_node->parent && _m_node == _m_node->parent->right)
 						_prev = RIGHT_BRANCH;
 				} else if (_prev == RIGHT_BRANCH) {
 					_m_node = _m_node->parent;
@@ -77,6 +88,8 @@ namespace ft
 					}
 				}
 			}
+
+			Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
 
 			return *this;
 		}
@@ -98,17 +111,25 @@ namespace ft
 			return result;
 		}
 
+		map_iterator operator+=(difference_type n) const
+		{
+			*this = *this + n;
+			return *this;
+		}
+
 		map_iterator &operator--() {
+			
+			Debug::Log << "Iterator-- started with " << _m_node->value.first;
 
 			if (_m_node->left) {
 				_m_node = _get_far_right(_m_node->left);
 				_prev = RIGHT_BRANCH;
-				if (_m_node == _m_node->parent->left)
+				if (_m_node->parent && _m_node == _m_node->parent->left)
 					_prev = LEFT_BRANCH;
 			} else {
 				if (_prev == RIGHT_BRANCH) {
 					_m_node = _m_node->parent;
-					if (_m_node == _m_node->parent->left)
+					if (_m_node->parent && _m_node == _m_node->parent->left)
 						_prev = LEFT_BRANCH;
 				} else if (_prev == LEFT_BRANCH) {
 					_m_node = _m_node->parent;
@@ -123,12 +144,10 @@ namespace ft
 					}
 				}
 			}
-			
-			return *this;
-		}
 
-		reference operator*() const {
-			return _m_node->value;
+			Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
+			 
+			return *this;
 		}
 
 		map_iterator operator--(int) {
@@ -148,9 +167,15 @@ namespace ft
 			return result;
 		}
 
+		map_iterator operator-=(difference_type n) const
+		{
+			*this = *this - n;
+			return *this;
+		}
+
 		template <bool c>
 		bool operator==(const map_iterator<T, c> &rhs) const {
-			return this->_m_node == rhs._m_node;
+			return this->_m_node == rhs.data();
 		}
 
 		template <bool c>
@@ -160,15 +185,17 @@ namespace ft
 
 	private:
 		node *_get_far_left(node *n) {
-			while (n->left)
+			while (n->left) {
 				n = n->left;
+			}
 			
 			return n;
 		}
 
 		node *_get_far_right(node *n) {
-			while (n->right)
+			while (n->right) {
 				n = n->right;
+			}
 			
 			return n;
 		}
@@ -185,6 +212,7 @@ namespace ft
 	private:
 
 		typedef ft::map<Key, T, Compare, Alloc> 						base;
+		typedef ft::B_TREE<Key, T, Compare>								B_tree;
 
 	public:
 
@@ -212,28 +240,36 @@ namespace ft
 	/* #endregion */
 
 	private:
-		ft::B_TREE<key_type, mapped_type, key_compare> _M_tree;
+		B_tree _M_tree;
+		key_compare _M_comp;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp, alloc) { }
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp, alloc) {
+			Debug::Log << "Default iterator called" << std::endl;
+		}
 
 		template <class InputIterator>
 		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp, alloc) {
-			(void)first;
-			(void)last;
+			Debug::Log << "Range Constructor called" << std::endl;
+			this->_range_copy(first, last);
 		}
 
 		map (const map& x) : _M_tree(key_compare(), allocator_type()) {
+			Debug::Log << "Copy Constructor called" << std::endl;
 			*this = x;
 		}
 
 		~map() { }
 
 		map& operator=(const map& x) {
+			Debug::Log << "Operator= called" << std::endl;
+
 			if (this == &x)
 				return *this;
+
+			this->clear();
 
 			this->_range_copy(x.begin(), x.end());
 
@@ -244,6 +280,7 @@ namespace ft
 		void _range_copy(InputIterator first, InputIterator last) {
 			for (; first != last; first++) {
 				this->insert(*first);
+				Debug::Log << "Copied pair of key " << first->first << " and value " << first->second << std::endl;
 			}
 		}
 
@@ -255,10 +292,10 @@ namespace ft
 	/* #region iterators */
 
 	public:
-		iterator begin() { return iterator(_M_tree.smallest() ); }
+		iterator begin() { Debug::Log << "begin" << std::endl; return iterator(_M_tree.smallest() ); }
 	 	const_iterator begin() const { return cbegin(); }
 	 	const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
-		iterator end() { return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
+		iterator end() { Debug::Log << "begin" << std::endl; return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
 		const_iterator end() const { return cend(); }
 	 	const_iterator cend() const { return const_iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
 	 	reverse_iterator rbegin() { return reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
@@ -291,11 +328,16 @@ namespace ft
 
 	public:
 		mapped_type& operator[] (const key_type& k) {
-			Debug::Log << "Map: operator[" << k << "]";
+			Debug::Log << "Map: operator[" << k << "]" << std::endl;
 
 			ft::node< value_type > *n = _M_tree.get_node(k);
 
-			return n->value.second;
+			if (n)
+				return n->value.second;
+
+			ft::pair<iterator, bool> new_node = this->insert( value_type(k, mapped_type()) );
+
+			return new_node.first->second;
 		}
 
 		mapped_type& at (const key_type& k) {
@@ -341,10 +383,12 @@ namespace ft
 		}
 
 		void erase (iterator position) {
-			_M_tree.erase((*position).first);
+			Debug::Log << "Erasing node of key " << position->first << std::endl;
+			_M_tree.erase(position->first);
 		}
 
 		size_type erase (const key_type& k) {
+			Debug::Log << "Erasing node of key " << k << std::endl;
 			if (_M_tree.erase(k))
 				return 1;
 
@@ -352,14 +396,20 @@ namespace ft
 		}
 
 		void erase (iterator first, iterator last) {
-			for (; first != last; first++)
-				_M_tree.erase((*first).first);
+			Debug::Log << "Range erasor called, from " << first->first << " to " << last->first << std::endl;
+
+			while (first != last) {
+				iterator to_del = first;
+				first++;
+				Debug::Log << "Range: erasing node of key " << to_del->first << std::endl;
+				_M_tree.erase(to_del->first);
+			}
+
+			Debug::Log << "Range erasor ended" << std::endl;
 		}
 
 		void swap (map& x) {
-			map temp(x);
-			x = *this;
-			*this = temp;
+			_M_tree.swap(x._M_tree);
 		}
 
 		void clear() {
@@ -369,34 +419,120 @@ namespace ft
 	/* #endregion */
 
 	/* #region observers */
+	private:
+
+		class value_compare : std::binary_function<value_type, value_type, bool> {
+			protected:
+				Compare comp;
+
+			public:
+				typedef bool result_type;
+				typedef value_type first_argument_type;
+				typedef value_type second_argument_type;
+
+				value_compare (Compare c) : comp(c) {}
+
+				bool operator() (const value_type& x, const value_type& y) const {
+					return comp(x.first, y.first);
+				}		
+		};
 
 	public:
 		key_compare key_comp() const { return _M_tree.key_comp(); }
 
-		//value_compare value_comp() const { }
+		value_compare value_comp() const { return value_compare(_M_comp); }
 
 	/* #endregion */
 
 	/* #region operations */
 
 	// public:
-	// 	iterator find (const key_type& k) { }
+	 	iterator find (const key_type& k) {
+			ft::node< value_type > *n = _M_tree.get_node(k);
+			
+			if (n == NULL)
+				n = _M_tree.past_the_end();
 
-	// 	const_iterator find (const key_type& k) const { }
+			return iterator(n);
+		}
 
-	// 	size_type count (const key_type& k) const { }
+	 	const_iterator find (const key_type& k) const {
+			ft::node< value_type > *n = _M_tree.get_node(k);
+			
+			if (n == NULL)
+				n = _M_tree.past_the_end();
 
-	// 	iterator lower_bound (const key_type& k) { }
+			return const_iterator(n);
+		}
 
-	// 	const_iterator lower_bound (const key_type& k) const { }
+	 	size_type count (const key_type& k) const {
+			ft::node< value_type > *n = this->_M_tree.get_node(k);
+			
+			if (n)
+				return 1;
 
-	// 	iterator upper_bound (const key_type& k) { }
+			return 0;
+		}
 
-	// 	const_iterator upper_bound (const key_type& k) const { }
+	 	iterator lower_bound (const key_type& k) {
+			iterator it = this->begin();
+			iterator ite = this->end();
+			
+			for (; it != ite; it++) {
+				if (this->_M_comp(k, it->first) || this->_M_comp(it->first, k) == false) // if (key < it) or if (key >= it && it >= key)
+					return it;
+			}
 
-	// 	ft::pair<const_iterator, const_iterator> equal_range (const key_type& k) const { }
+			return ite;
+		}
 
-	// 	ft::pair<iterator, iterator> equal_range (const key_type& k) { }
+	 	const_iterator lower_bound (const key_type& k) const {
+			const_iterator it = this->begin();
+			const_iterator ite = this->end();
+			
+			for (; it != ite; it++) {
+				if (this->_M_comp(k, it->first) || this->_M_comp(it->first, k) == false) // if (key < it) or if (key >= it && it >= key)
+					return it;
+			}
+
+			return ite;
+		}
+
+	 	iterator upper_bound (const key_type& k) {
+			iterator it = this->begin();
+			iterator ite = this->end();
+			
+			for (; it != ite; it++) {
+				if (this->_M_comp(k, it->first)) // if (key < it)
+					return it;
+			}
+
+			return ite;
+		}
+
+	 	const_iterator upper_bound (const key_type& k) const {
+			const_iterator it = this->begin();
+			const_iterator ite = this->end();
+			
+			for (; it != ite; it++) {
+				if (this->_M_comp(k, it->first)) // if (key < it)
+					return it;
+			}
+
+			return ite;
+		}
+
+	 	ft::pair<const_iterator, const_iterator> equal_range (const key_type& k) const {
+			ft::pair<const_iterator, const_iterator> const_range(this->lower_bound(k), this->upper_bound(k));
+
+			return const_range;
+		}
+
+	 	ft::pair<iterator, iterator> equal_range (const key_type& k) {
+			ft::pair<iterator, iterator> range(this->lower_bound(k), this->upper_bound(k));
+
+			return range;
+		}
 
 	/* #endregion */
 

@@ -22,23 +22,24 @@ int main() {
 
 	clock_t start = clock();
 	
+	my_map[98] = 'a';
 	my_map.insert( NS::make_pair(98, 'a') );
-	my_map.insert( NS::make_pair(8, 'b') );
-	my_map.insert( NS::make_pair(81, 'c') );
-	my_map.insert( NS::make_pair(90, 'd') );
-	my_map.insert( NS::make_pair(5, 'e') );
-	my_map.insert( NS::make_pair(23, 'f') );
-	my_map.insert( NS::make_pair(20, 'g') );
-	my_map.insert( NS::make_pair(52, 'h') );
-	my_map.insert( NS::make_pair(99, 'i') );
-	my_map.insert( NS::make_pair(2, 'j') );
-	my_map.insert( NS::make_pair(91, 'k') );
-	my_map.insert( NS::make_pair(105, 'l') );
-	my_map.insert( NS::make_pair(18, 'm') );
-	my_map.insert( NS::make_pair(1, 'n') );
-	my_map.insert( NS::make_pair(19, 'o') );
-	my_map.insert( NS::make_pair(0, 'p') );
-	my_map.insert( NS::make_pair(4, 'q') );
+	// my_map.insert( NS::make_pair(8, 'b') );
+	// my_map.insert( NS::make_pair(81, 'c') );
+	// my_map.insert( NS::make_pair(90, 'd') );
+	// my_map.insert( NS::make_pair(5, 'e') );
+	// my_map.insert( NS::make_pair(23, 'f') );
+	// my_map.insert( NS::make_pair(20, 'g') );
+	// my_map.insert( NS::make_pair(52, 'h') );
+	// my_map.insert( NS::make_pair(99, 'i') );
+	// my_map.insert( NS::make_pair(2, 'j') );
+	// my_map.insert( NS::make_pair(91, 'k') );
+	// my_map.insert( NS::make_pair(105, 'l') );
+	// my_map.insert( NS::make_pair(18, 'm') );
+	// my_map.insert( NS::make_pair(1, 'n') );
+	// my_map.insert( NS::make_pair(19, 'o') );
+	// my_map.insert( NS::make_pair(0, 'p') );
+	// my_map.insert( NS::make_pair(4, 'q') );
 
 	clock_t end = clock();
 

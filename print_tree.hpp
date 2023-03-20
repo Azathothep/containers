@@ -29,7 +29,7 @@ namespace ft {
 	class integral_printer {
 		public:
 			template <typename T>
-			void out(T const & val, std::ostream & o = std::cout) {
+			void out(T const & val, std::ostream & o = std::cout, typename ft::enable_if< ft::is_integral<T>::value >::type* = NULL) {
 				o << val;
 			}
 

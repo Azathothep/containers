@@ -55,6 +55,25 @@ namespace ft {
 				size = 0;
 			}
 
+			void swap(B_TREE & rhs) {
+				Debug::Log << "B_TREE swap called" << std::endl;
+
+				node *t_root = this->_root;
+				
+				this->_root = rhs._root;
+				rhs._root = t_root;
+
+				this->_god.left = this->_root;
+				rhs._god.left = rhs._root;
+
+				this->_root->parent = this->_god_p;
+				rhs._root->parent = rhs._god_p;
+
+				int t_size = this->size;
+				this->size = rhs.size;
+				rhs.size = t_size;
+			}
+
 			compare_type key_comp() const { return _M_comp; }
 
 			allocator_type get_allocator() const { return _M_alloc; }
@@ -62,6 +81,11 @@ namespace ft {
 			void destroy_all() {
 				if (this->root())
 					this->_move_destroy(this->_root);
+
+				this->_god.left = NULL;
+				this->_root = NULL;
+
+				PRINT_TREE;
 			}
 
 			void _move_destroy(node *current) {
@@ -73,13 +97,13 @@ namespace ft {
 				this->_delete_allocated(current);
 			}
 
-			node *get_node(key_type const & key) {
+			node *get_node(key_type const & key) const {
 				node *n = this->root();
 
 				return get_node(key, n);
 			}
 
-			node *get_node(key_type const & key, node *n) {
+			node *get_node(key_type const & key, node *n) const {
 				if(n == NULL)
 					return n;
 
@@ -94,22 +118,26 @@ namespace ft {
 			}
 
 			ft::pair< ft::node<value_type> *, bool> insert(value_type const & val) {
-				node *node = this->get_node(val.first, this->root());
+				node *n = this->get_node(val.first, this->root());
 				ft::pair< ft::node<value_type> *, bool> return_pair;
 				
-				if (node) {
-					return_pair.first = node;
+				if (n) {
+					return_pair.first = n;
 					return_pair.second = false;
 					return return_pair;
 				}
 
-				node = this->_create_node(val);
+				n = this->_create_node(val);
 
-				if (this->_root)
-					this->_move_insert(&this->_root, node);
+				if (this->_root) {
+					Debug::Log << "Move_inserting node" << std::endl;
+					this->_move_insert(&this->_root, n);
+				}
 				else
 				{
-					this->_root = node;
+					Debug::Log << "Replacing root" << std::endl;
+
+					this->_root = n;
 					this->_root->color = BLACK_NODE;
 
 					this->_god.left = this->_root;
@@ -118,24 +146,24 @@ namespace ft {
 
 				size++;
 				
-				return_pair.first = node;
+				return_pair.first = n;
 				return_pair.second = true;
 
 				return return_pair;
 			}
 
 			node *insert_from(value_type const & val, Key const & from) {
-				node *node = this->get_node(val.first, this->root());
+				node *n = this->get_node(val.first, this->root());
 
-				if (node)
-					return node;
+				if (n)
+					return n;
 				
-				node *insert = this->get_node(from, this->root());
+				node *to_insert = this->get_node(from, this->root());
 
-				if (insert && _M_comp(insert->value.first, from)) {
-					node = this->_create_node(val);
-					this->_move_insert(&node, insert, insert->parent);
-					return node;
+				if (to_insert && _M_comp(to_insert->value.first, from)) {
+					n = this->_create_node(val);
+					this->_move_insert(&n, to_insert, to_insert->parent);
+					return n;
 				}
 
 				return insert(val).first;
@@ -148,7 +176,6 @@ namespace ft {
 					return false;
 
 				this->_erase_node(n);
-				size--;
 
 				return true;
 			}
@@ -157,7 +184,7 @@ namespace ft {
 				node *n = this->root();
 
 				if (n == NULL)
-					return NULL;
+					return past_the_end();
 				
 				if (n->left)
 				{
@@ -182,8 +209,10 @@ namespace ft {
 			void _replace(node *n, node *r) {
 				node *p = n->parent;
 				
-				if (p == NULL || p == &(this->_god))
+				if (p == &(this->_god)) {
 					this->_root = r;
+					this->_god.left = this->_root;
+				}
 				else if (n == p->left)
 					p->left = r;
 				else if (n == p->right)
@@ -201,9 +230,13 @@ namespace ft {
 			void _delete_allocated(node *n) {
 				Debug::Log << "Deleting node of key " << n->value.first << std::endl;
 
+				n->left = NULL;
+				n->right = NULL;
+				n->parent = NULL;
 				_M_alloc.destroy(n);
 				_M_alloc.deallocate(n, 1);
 				n = NULL;
+				size--;
 			}
 
 			node *_create_node(value_type const & val) {
