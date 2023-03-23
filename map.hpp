@@ -1,6 +1,10 @@
 #ifndef MAP_HPP
 # define MAP_HPP
 
+# ifdef DEBUG_MODE
+#	include "Debug.hpp"
+# endif
+
 # include "ft/pair.hpp"
 # include "ft/make_pair.hpp"
 # include "ft/is_const.hpp"
@@ -62,7 +66,9 @@ namespace ft
 		}
 
 		map_iterator &operator++() {
-			Debug::Log << "Iterator++ started with " << _m_node->value.first;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Iterator++ started with " << _m_node->value.first;
+			#endif
 
 			if (_m_node->right) {
 				_m_node = _get_far_left(_m_node->right);
@@ -89,7 +95,9 @@ namespace ft
 				}
 			}
 
-			Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
+			#endif
 
 			return *this;
 		}
@@ -118,8 +126,9 @@ namespace ft
 		}
 
 		map_iterator &operator--() {
-			
-			Debug::Log << "Iterator-- started with " << _m_node->value.first;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Iterator-- started with " << _m_node->value.first;
+			#endif
 
 			if (_m_node->left) {
 				_m_node = _get_far_right(_m_node->left);
@@ -145,7 +154,9 @@ namespace ft
 				}
 			}
 
-			Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
+			#endif
 			 
 			return *this;
 		}
@@ -247,24 +258,34 @@ namespace ft
 
 	public:
 		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp, alloc) {
-			Debug::Log << "Default iterator called" << std::endl;
+			#ifdef DEBUG
+				Debug::Log << "Default iterator called" << std::endl;
+			#endif
 		}
 
 		template <class InputIterator>
 		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp, alloc) {
-			Debug::Log << "Range Constructor called" << std::endl;
+			#ifdef DEBUG
+				Debug::Log << "Range Constructor called" << std::endl;
+			#endif
+
 			this->_range_copy(first, last);
 		}
 
 		map (const map& x) : _M_tree(key_compare(), allocator_type()) {
-			Debug::Log << "Copy Constructor called" << std::endl;
+			#ifdef DEBUG
+				Debug::Log << "Copy Constructor called" << std::endl;
+			#endif
+			
 			*this = x;
 		}
 
 		~map() { }
 
 		map& operator=(const map& x) {
-			Debug::Log << "Operator= called" << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Operator= called" << std::endl;
+			#endif
 
 			if (this == &x)
 				return *this;
@@ -280,7 +301,9 @@ namespace ft
 		void _range_copy(InputIterator first, InputIterator last) {
 			for (; first != last; first++) {
 				this->insert(*first);
-				Debug::Log << "Copied pair of key " << first->first << " and value " << first->second << std::endl;
+				#ifdef DEBUG_MODE
+					Debug::Log << "Copied pair of key " << first->first << " and value " << first->second << std::endl;
+				#endif
 			}
 		}
 
@@ -292,10 +315,10 @@ namespace ft
 	/* #region iterators */
 
 	public:
-		iterator begin() { Debug::Log << "begin" << std::endl; return iterator(_M_tree.smallest() ); }
+		iterator begin() { return iterator(_M_tree.smallest() ); }
 	 	const_iterator begin() const { return cbegin(); }
 	 	const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
-		iterator end() { Debug::Log << "begin" << std::endl; return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
+		iterator end() { return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
 		const_iterator end() const { return cend(); }
 	 	const_iterator cend() const { return const_iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
 	 	reverse_iterator rbegin() { return reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
@@ -328,7 +351,9 @@ namespace ft
 
 	public:
 		mapped_type& operator[] (const key_type& k) {
-			Debug::Log << "Map: operator[" << k << "]" << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Map: operator[" << k << "]" << std::endl;
+			#endif
 
 			ft::node< value_type > *n = _M_tree.get_node(k);
 
@@ -383,12 +408,18 @@ namespace ft
 		}
 
 		void erase (iterator position) {
-			Debug::Log << "Erasing node of key " << position->first << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Erasing node of key " << position->first << std::endl;
+			#endif
+			
 			_M_tree.erase(position->first);
 		}
 
 		size_type erase (const key_type& k) {
-			Debug::Log << "Erasing node of key " << k << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Erasing node of key " << k << std::endl;
+			#endif
+			
 			if (_M_tree.erase(k))
 				return 1;
 
@@ -396,16 +427,15 @@ namespace ft
 		}
 
 		void erase (iterator first, iterator last) {
-			Debug::Log << "Range erasor called, from " << first->first << " to " << last->first << std::endl;
+			#ifdef DEBUG_MODE
+				Debug::Log << "Range erasor called, from " << first->first << " to " << last->first << std::endl;
+			#endif
 
 			while (first != last) {
 				iterator to_del = first;
 				first++;
-				Debug::Log << "Range: erasing node of key " << to_del->first << std::endl;
 				_M_tree.erase(to_del->first);
 			}
-
-			Debug::Log << "Range erasor ended" << std::endl;
 		}
 
 		void swap (map& x) {
