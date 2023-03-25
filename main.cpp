@@ -42,66 +42,51 @@ int main() {
 	my_map.insert( NS::make_pair(0, 'p') );
 	my_map.insert( NS::make_pair(4, 'q') );
 
-	clock_t end = clock();
+	//printer.print(my_map);
 
-	std::cout << "Measured time: " << end - start << std::endl;
-
-	// std::cout << "Before erasures" << std::endl;
-
-	// printer.print(my_map);
-
-	// my_map.erase(81);
-	// my_map.erase(52);
-	// my_map.erase(23);
-	// my_map.erase(20);
-
-	// std::cout << std::endl << "ANSer erasures" << std::endl;
+	my_map.erase(81);
+	my_map.erase(52);
+	my_map.erase(23);
+	my_map.erase(20);
 
 	//printer.print(my_map);
 
-	// NS::map<int, char>::iterator it = my_map.begin();
-	// NS::map<int, char>::iterator it2;
-	// NS::map<int, char>::iterator ite = my_map.end();
+	NS::map<int, char>::iterator it = my_map.begin();
+	NS::map<int, char>::iterator it2;
+	NS::map<int, char>::iterator ite = my_map.end();
 
-	// for (; it != ite; it++)
-	// {
-	// 	it2 = it;
-	// 	std::cout << "iterator: " << (*it).first << ", " << (*it).second << std::endl;
-	// 	it2++;
-	// 	if (it2 != ite)
-	// 		my_map.erase((*it2).first);
-	// }
+	for (; it != ite; it++)
+	{
+		it2 = it;
+		it2++;
+		if (it2 != ite)
+			my_map.erase((*it2).first);
+	}
 
-	// //printer.print(my_map);
+	//printer.print(my_map);
 
-	// std::cout << std::endl << "Testing copy -------------------------------------" << std::endl << std::endl;
+	NS::map<int, char> sec_map;
 
-	// NS::map<int, char> sec_map;
+	sec_map = my_map;
 
-	// std::cout << "emptiness = " << sec_map.empty() << std::endl;
-	// std::cout << "size = " << sec_map.size() << std::endl;
-	// std::cout << "maxsize = " << sec_map.max_size() << std::endl;
+	it = sec_map.begin();
+	ite = sec_map.end();
 
-	// sec_map = my_map;
+	for (; it != ite; it++)
+	{
 
-	// it = sec_map.begin();
-	// ite = sec_map.end();
+	}
 
-	// std::cout << "emptiness = " << sec_map.empty() << std::endl;
-	// std::cout << "size = " << sec_map.size() << std::endl;
+	try {
+		sec_map.at(189);
+	}
+	catch (std::exception &e) {
+		
+	}
 
-	// for (; it != ite; it++)
-	// {
-	// 	std::cout << "iterator with []: " << (*it).first << ", " << sec_map[(*it).first] << std::endl;
-	// 	std::cout << "iterator with at: " << (*it).first << ", " << sec_map.at((*it).first) << std::endl;
-	// }
+	clock_t end = clock();
 
-	// try {
-	// 	std::cout << "iterator at end: " << sec_map.at(189);
-	// }
-	// catch (std::exception &e) {
-	// 	std::cout << e.what() << std::endl;
-	// }
+	std::cout << "Measured time: " << end - start << std::endl;
 
 	return 0;
 }
