@@ -17,7 +17,7 @@ namespace ft
 {
 	/* #region iterator */
 
-	template <typename T, bool constness = false>
+	template <typename T, class Compare = std::less< typename T::first_type >, bool constness = false>
 	class map_iterator {
 	
 	#define LEFT_BRANCH 0
@@ -30,23 +30,25 @@ namespace ft
 		typedef	value_type*																 	pointer;
 		typedef value_type&														 			reference;
 
+		typedef Compare																		key_compare;
+
 	private:
 		typedef typename ft::node< T >														node;
 
-		node 	*_m_node;
-		int		_prev;
+		node 		*_m_node;
+		key_compare _m_comp;
+		int			_prev;
 
 	public:
-		map_iterator() { }
-		map_iterator(node *n, int comes_from = LEFT_BRANCH) : _m_node(n), _prev(comes_from) {}
+		map_iterator(node *n = NULL, const key_compare & comp = key_compare()) : _m_node(n), _m_comp(comp) {}
 
 		template <bool c>
-		map_iterator(const map_iterator<T, c> &rhs) {
+		map_iterator(const map_iterator<T, key_compare, c> &rhs) {
 			*this = rhs;
 		}
 
 		template <bool c>
-		map_iterator &operator=(const map_iterator<T, c> &rhs) {
+		map_iterator &operator=(const map_iterator<T, key_compare, c> &rhs) {
 			this->_m_node = rhs.data();
 			this->_prev = rhs.prev();
 			return *this;
@@ -66,38 +68,33 @@ namespace ft
 		}
 
 		map_iterator &operator++() {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Iterator++ started with " << _m_node->value.first;
-			#endif
 
 			if (_m_node->right) {
 				_m_node = _get_far_left(_m_node->right);
-				_prev = LEFT_BRANCH;
-				if (_m_node->parent && _m_node == _m_node->parent->right)
-					_prev = RIGHT_BRANCH;
-			} else {
-				if (_prev == LEFT_BRANCH) {
+			} else { // if has no right child...
+				if (_m_node->parent == NULL) { // ...and this is already god
+					return *this;
+				} else if (_m_node->child_status() == LEFT_CHILD) { // ...and is a left child
 					_m_node = _m_node->parent;
+				} else { // ...and is a right child
+					// start tests from grandparent, because here the parent is, in any case, inferior
+					node *cursor = _m_node->parent;
+					node *tested = cursor->parent;
 
-					if (_m_node->parent && _m_node == _m_node->parent->right)
-						_prev = RIGHT_BRANCH;
-				} else if (_prev == RIGHT_BRANCH) {
-					_m_node = _m_node->parent;
-
-					while (_prev == RIGHT_BRANCH) {
-						if (_m_node->parent == NULL)
+					while (tested->parent) {
+						if (_m_comp(_m_node->value.first, tested->value.first)) { // if parent > child
+							if (tested->right)
+								tested = _get_far_left(tested->right);
 							break;
-
-						if (_m_node == _m_node->parent->left)
-							_prev = LEFT_BRANCH;
-						_m_node = _m_node->parent;
+						}
+						
+						cursor = tested;
+						tested = tested->parent;
 					}
+
+					_m_node = tested;
 				}
 			}
-
-			#ifdef DEBUG_MODE
-				Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
-			#endif
 
 			return *this;
 		}
@@ -185,12 +182,12 @@ namespace ft
 		}
 
 		template <bool c>
-		bool operator==(const map_iterator<T, c> &rhs) const {
+		bool operator==(const map_iterator<T, key_compare, c> &rhs) const {
 			return this->_m_node == rhs.data();
 		}
 
 		template <bool c>
-		bool operator!=(const map_iterator<T, c> &rhs) const {
+		bool operator!=(const map_iterator<T, key_compare, c> &rhs) const {
 			return !(*this == rhs);
 		}
 
@@ -240,8 +237,8 @@ namespace ft
 		typedef typename allocator_type::pointer 						pointer;
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
-		typedef map_iterator<value_type>								iterator;
-		typedef map_iterator<value_type, IS_CONST>						const_iterator;
+		typedef map_iterator<value_type, key_compare>					iterator;
+		typedef map_iterator<value_type, key_compare, IS_CONST>			const_iterator;
 		typedef ft::reverse_iterator<iterator>							reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
 
@@ -318,12 +315,12 @@ namespace ft
 		iterator begin() { return iterator(_M_tree.smallest() ); }
 	 	const_iterator begin() const { return cbegin(); }
 	 	const_iterator cbegin() const { return const_iterator(_M_tree.smallest() ); }
-		iterator end() { return iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
+		iterator end() { return iterator(_M_tree.past_the_end()); }
 		const_iterator end() const { return cend(); }
-	 	const_iterator cend() const { return const_iterator(_M_tree.past_the_end(), RIGHT_BRANCH); }
-	 	reverse_iterator rbegin() { return reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
+	 	const_iterator cend() const { return const_iterator(_M_tree.past_the_end()); }
+	 	reverse_iterator rbegin() { return reverse_iterator(iterator(_M_tree.past_the_end())); }
 		const_reverse_iterator rbegin() const { return crbegin(); }
-		const_reverse_iterator crbegin() const { return const_reverse_iterator(iterator(_M_tree.past_the_end(), RIGHT_BRANCH)); }
+		const_reverse_iterator crbegin() const { return const_reverse_iterator(iterator(_M_tree.past_the_end())); }
 		reverse_iterator rend() { return reverse_iterator(iterator(_M_tree.smallest())); }
 		const_reverse_iterator rend() const { return crend(); }
 		const_reverse_iterator crend() const { return const_reverse_iterator(iterator(_M_tree.smallest())); }

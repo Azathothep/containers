@@ -44,6 +44,10 @@ int main() {
 
 	//printer.print(my_map);
 
+	NS::map<int, char>::iterator it = my_map.begin();
+	it++;
+
+	my_map.erase(0);
 	my_map.erase(81);
 	my_map.erase(52);
 	my_map.erase(23);
@@ -51,38 +55,42 @@ int main() {
 
 	//printer.print(my_map);
 
-	NS::map<int, char>::iterator it = my_map.begin();
-	NS::map<int, char>::iterator it2;
+	// NS::map<int, char>::iterator it2;
 	NS::map<int, char>::iterator ite = my_map.end();
 
 	for (; it != ite; it++)
 	{
-		it2 = it;
-		it2++;
-		if (it2 != ite)
-			my_map.erase((*it2).first);
+		std::cout << "Iterator key: " << it->first << std::endl;
 	}
 
-	//printer.print(my_map);
+	// for (; it != ite; it++)
+	// {
+	// 	it2 = it;
+	// 	it2++;
+	// 	if (it2 != ite)
+	// 		my_map.erase((*it2).first);
+	// }
 
-	NS::map<int, char> sec_map;
+	// //printer.print(my_map);
 
-	sec_map = my_map;
+	// NS::map<int, char> sec_map;
 
-	it = sec_map.begin();
-	ite = sec_map.end();
+	// sec_map = my_map;
 
-	for (; it != ite; it++)
-	{
+	// it = sec_map.begin();
+	// ite = sec_map.end();
 
-	}
+	// for (; it != ite; it++)
+	// {
 
-	try {
-		sec_map.at(189);
-	}
-	catch (std::exception &e) {
+	// }
+
+	// try {
+	// 	sec_map.at(189);
+	// }
+	// catch (std::exception &e) {
 		
-	}
+	// }
 
 	clock_t end = clock();
 
