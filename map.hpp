@@ -81,8 +81,8 @@ namespace ft
 					node *cursor = _m_node->parent;
 					node *tested = cursor->parent;
 
-					while (tested->parent) {
-						if (_m_comp(_m_node->value.first, tested->value.first)) { // if parent > child
+					while (tested->parent) { // while tested is not god
+						if (_m_comp(_m_node->value.first, tested->value.first)) { // if tested > node
 							if (tested->right)
 								tested = _get_far_left(tested->right);
 							break;
