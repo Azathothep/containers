@@ -17,7 +17,7 @@ namespace ft
 {
 	/* #region iterator */
 
-	template <typename T, class Compare = std::less< typename T::first_type >, bool constness = false>
+	template <typename T, bool constness = false>
 	class map_iterator {
 	
 	#define LEFT_BRANCH 0
@@ -30,25 +30,22 @@ namespace ft
 		typedef	value_type*																 	pointer;
 		typedef value_type&														 			reference;
 
-		typedef Compare																		key_compare;
-
 	private:
 		typedef typename ft::node< T >														node;
 
 		node 		*_m_node;
-		key_compare _m_comp;
 		int			_prev;
 
 	public:
-		map_iterator(node *n = NULL, const key_compare & comp = key_compare()) : _m_node(n), _m_comp(comp) {}
+		map_iterator(node *n = NULL) : _m_node(n) {}
 
 		template <bool c>
-		map_iterator(const map_iterator<T, key_compare, c> &rhs) {
+		map_iterator(const map_iterator<T, c> &rhs) {
 			*this = rhs;
 		}
 
 		template <bool c>
-		map_iterator &operator=(const map_iterator<T, key_compare, c> &rhs) {
+		map_iterator &operator=(const map_iterator<T, c> &rhs) {
 			this->_m_node = rhs.data();
 			this->_prev = rhs.prev();
 			return *this;
@@ -78,21 +75,18 @@ namespace ft
 					_m_node = _m_node->parent;
 				} else { // ...and is a right child
 					// start tests from grandparent, because here the parent is, in any case, inferior
-					node *cursor = _m_node->parent;
-					node *tested = cursor->parent;
+					_m_node = _m_node->parent;
 
-					while (tested->parent) { // while tested is not god
-						if (_m_comp(_m_node->value.first, tested->value.first)) { // if tested > node
-							if (tested->right)
-								tested = _get_far_left(tested->right);
+					while (_m_node->parent) { // while node is not god
+						if (_m_node->child_status() == LEFT_CHILD) { // if node branch is a left branch, then the parent is higher than the original
+							_m_node = _m_node->parent;
+							if (_m_node->right)
+								_m_node = _get_far_left(_m_node->right);
 							break;
 						}
-						
-						cursor = tested;
-						tested = tested->parent;
-					}
 
-					_m_node = tested;
+						_m_node = _m_node->parent;
+					}
 				}
 			}
 
@@ -182,12 +176,12 @@ namespace ft
 		}
 
 		template <bool c>
-		bool operator==(const map_iterator<T, key_compare, c> &rhs) const {
+		bool operator==(const map_iterator<T, c> &rhs) const {
 			return this->_m_node == rhs.data();
 		}
 
 		template <bool c>
-		bool operator!=(const map_iterator<T, key_compare, c> &rhs) const {
+		bool operator!=(const map_iterator<T, c> &rhs) const {
 			return !(*this == rhs);
 		}
 
@@ -237,8 +231,8 @@ namespace ft
 		typedef typename allocator_type::pointer 						pointer;
 		typedef typename allocator_type::const_pointer 					const_pointer;
 
-		typedef map_iterator<value_type, key_compare>					iterator;
-		typedef map_iterator<value_type, key_compare, IS_CONST>			const_iterator;
+		typedef map_iterator<value_type>								iterator;
+		typedef map_iterator<value_type, IS_CONST>						const_iterator;
 		typedef ft::reverse_iterator<iterator>							reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
 
