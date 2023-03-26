@@ -9,6 +9,8 @@
 # include "ft/make_pair.hpp"
 # include "ft/is_const.hpp"
 # include "ft/reverse_iterator.hpp"
+# include "ft/enable_if.hpp"
+# include "ft/is_integral.hpp"
 
 # include "node.hpp"
 # include "b_tree.hpp"
@@ -34,7 +36,6 @@ namespace ft
 		typedef typename ft::node< T >														node;
 
 		node 		*_m_node;
-		int			_prev;
 
 	public:
 		map_iterator(node *n = NULL) : _m_node(n) {}
@@ -47,14 +48,12 @@ namespace ft
 		template <bool c>
 		map_iterator &operator=(const map_iterator<T, c> &rhs) {
 			this->_m_node = rhs.data();
-			this->_prev = rhs.prev();
 			return *this;
 		}
 
 		~map_iterator() {}
 
 		node *data() const { return this->_m_node; }
-		int  prev() const { return this->_prev; }
 
 		reference operator*() const {
 			return _m_node->value;
@@ -78,13 +77,11 @@ namespace ft
 					_m_node = _m_node->parent;
 
 					while (_m_node->parent) { // while node is not god
-						if (_m_node->child_status() == LEFT_CHILD) { // if node branch is a left branch, then the parent is higher than the original
+						if (_m_node->child_status() == LEFT_CHILD) {// if node branch is a left branch, then the parent is higher than the original
 							_m_node = _m_node->parent;
-							if (_m_node->right)
-								_m_node = _get_far_left(_m_node->right);
 							break;
 						}
-
+						
 						_m_node = _m_node->parent;
 					}
 				}
@@ -101,7 +98,7 @@ namespace ft
 
 		map_iterator operator+(difference_type n) const
 		{
-			map_iterator result(_m_node, _prev);
+			map_iterator result(_m_node);
 
 			for (int i = 0; i < n; i++) {
 				++result;
@@ -117,37 +114,27 @@ namespace ft
 		}
 
 		map_iterator &operator--() {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Iterator-- started with " << _m_node->value.first;
-			#endif
 
 			if (_m_node->left) {
 				_m_node = _get_far_right(_m_node->left);
-				_prev = RIGHT_BRANCH;
-				if (_m_node->parent && _m_node == _m_node->parent->left)
-					_prev = LEFT_BRANCH;
-			} else {
-				if (_prev == RIGHT_BRANCH) {
+			} else { // if has no left child...
+				if (_m_node->parent == NULL) { // ...and is god -> tree is empty
+					return *this;
+				} else if (_m_node->child_status() == RIGHT_CHILD) {
 					_m_node = _m_node->parent;
-					if (_m_node->parent && _m_node == _m_node->parent->left)
-						_prev = LEFT_BRANCH;
-				} else if (_prev == LEFT_BRANCH) {
+				} else { // ...and is a left child
 					_m_node = _m_node->parent;
 
-					while (_prev == LEFT_BRANCH) {
-						if (_m_node->parent == NULL)
+					while (_m_node->parent) { // while node is not god
+						if (_m_node->child_status() == RIGHT_CHILD) {
+							_m_node = _m_node->parent;
 							break;
-
-						if (_m_node == _m_node->parent->right)
-							_prev = RIGHT_BRANCH;
+						}
+						
 						_m_node = _m_node->parent;
 					}
 				}
 			}
-
-			#ifdef DEBUG_MODE
-				Debug::Log << " & ended with value: " << _m_node->value.first << std::endl;
-			#endif
 			 
 			return *this;
 		}
@@ -160,7 +147,7 @@ namespace ft
 
 		map_iterator operator-(difference_type n) const
 		{
-			map_iterator result(_m_node, _prev);
+			map_iterator result(_m_node);
 
 			for (int i = 0; i < n; i++) {
 				--result;
@@ -175,13 +162,13 @@ namespace ft
 			return *this;
 		}
 
-		template <bool c>
-		bool operator==(const map_iterator<T, c> &rhs) const {
+		template <typename U, bool c>
+		bool operator==(const map_iterator<U, c> &rhs) const {
 			return this->_m_node == rhs.data();
 		}
 
-		template <bool c>
-		bool operator!=(const map_iterator<T, c> &rhs) const {
+		template <typename U, bool c>
+		bool operator!=(const map_iterator<U, c> &rhs) const {
 			return !(*this == rhs);
 		}
 
