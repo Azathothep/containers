@@ -11,6 +11,7 @@
 # include "ft/reverse_iterator.hpp"
 # include "ft/enable_if.hpp"
 # include "ft/is_integral.hpp"
+# include "ft/lexicographical_compare.hpp"
 
 # include "node.hpp"
 # include "b_tree.hpp"
@@ -164,7 +165,7 @@ namespace ft
 
 		template <typename U, bool c>
 		bool operator==(const map_iterator<U, c> &rhs) const {
-			return this->_m_node == rhs.data();
+			return (void *)this->_m_node == (void *)rhs.data();
 		}
 
 		template <typename U, bool c>
@@ -210,7 +211,7 @@ namespace ft
 		typedef ft::pair<const key_type, mapped_type>					value_type;
 
 		typedef Compare													key_compare;
-		//typedef value_compare; Nested function class to compare elements (see value_comp)
+		//typedef value_compare											value_compare;
 		typedef Alloc													allocator_type;
 
 		typedef typename allocator_type::reference 						reference;
@@ -427,7 +428,7 @@ namespace ft
 	/* #endregion */
 
 	/* #region observers */
-	private:
+	public:
 
 		class value_compare : std::binary_function<value_type, value_type, bool> {
 			protected:
@@ -548,6 +549,59 @@ namespace ft
 		allocator_type get_allocator() const { return _M_tree.get_allocator(); }
 
 	};
+
+	/* #endregion */
+
+	/* #region relational operators */
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator==( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		if (lhs.size() != rhs.size())
+			return false;
+
+		typename map<Key,T,Compare,Alloc>::const_iterator lit = lhs.cbegin();
+		typename map<Key,T,Compare,Alloc>::const_iterator lite = lhs.cend();
+		typename map<Key,T,Compare,Alloc>::const_iterator rit = rhs.cbegin();
+		typename map<Key,T,Compare,Alloc>::const_iterator rite = rhs.cend();
+
+		for(; lit != lite; lit++) {
+			if (*lit != *rit)
+				return false;
+			rit++;
+		}
+
+		return true;
+	}
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator!=( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		return !(lhs == rhs);
+	}
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator<( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		typename map<Key,T,Compare,Alloc>::const_iterator lit = lhs.cbegin();
+		typename map<Key,T,Compare,Alloc>::const_iterator lite = lhs.cend();
+		typename map<Key,T,Compare,Alloc>::const_iterator rit = rhs.cbegin();
+		typename map<Key,T,Compare,Alloc>::const_iterator rite = rhs.cend();
+
+		return lexicographical_compare(lit, lite, rit, rite);
+	}
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator>( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		return rhs < lhs;
+	}
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator>=( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		return !(lhs < rhs);
+	}
+
+	template <class Key, class T, class Compare, class Alloc>
+	bool operator<=( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
+		return !(lhs > rhs);
+	}
 
 	/* #endregion */
 }
