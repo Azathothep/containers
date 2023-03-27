@@ -211,7 +211,6 @@ namespace ft
 		typedef ft::pair<const key_type, mapped_type>					value_type;
 
 		typedef Compare													key_compare;
-		//typedef value_compare											value_compare;
 		typedef Alloc													allocator_type;
 
 		typedef typename allocator_type::reference 						reference;
@@ -429,7 +428,6 @@ namespace ft
 
 	/* #region observers */
 	public:
-
 		class value_compare : std::binary_function<value_type, value_type, bool> {
 			protected:
 				Compare comp;
@@ -446,7 +444,6 @@ namespace ft
 				}		
 		};
 
-	public:
 		key_compare key_comp() const { return _M_tree.key_comp(); }
 
 		value_compare value_comp() const { return value_compare(_M_comp); }
