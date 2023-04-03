@@ -42,6 +42,7 @@ namespace ft
 	public:
 		map_iterator(node *n = NULL) : _m_node(n) {}
 
+		// check const to non-const
 		template <bool c>
 		map_iterator(const map_iterator<T, c> &rhs) {
 			*this = rhs;
@@ -166,7 +167,7 @@ namespace ft
 
 		template <typename U, bool c>
 		bool operator==(const map_iterator<U, c> &rhs) const {
-			return (void *)this->_m_node == (void *)rhs.data();
+			return this->_m_node == rhs.data();
 		}
 
 		template <typename U, bool c>
@@ -195,13 +196,7 @@ namespace ft
 	/* #endregion */
 
 	/* #region key_getter */
-	template <class value_type>
-	class map_key_getter {
-		public:
-			typedef typename value_type::first_type 	key_type;
 
-			key_type const & get(value_type const & val) const { return val.first; }
-	};
 
 	/* #endregion */
 
@@ -211,9 +206,6 @@ namespace ft
 	class map {
 
 	/* #region typedefs */
-	private:
-
-		typedef ft::map<Key, T, Compare, Alloc> 						base;
 
 	public:
 
@@ -240,8 +232,15 @@ namespace ft
 	/* #endregion */
 
 	private:
-		typedef ft::map_key_getter< value_type >						key_getter;
-		typedef ft::binary_tree<value_type, key_getter, Compare >	binary_tree;
+		
+		class map_key_getter {
+			public:
+				typedef typename value_type::first_type 						key_type;
+
+				key_type const & get(value_type const & val) const { return val.first; }
+		};
+
+		typedef ft::binary_tree<value_type, map_key_getter, key_compare>		binary_tree;
 
 		binary_tree _M_tree;
 		key_compare _M_comp;
@@ -250,22 +249,24 @@ namespace ft
 
 	public:
 		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp) {
-			#ifdef DEBUG
+			(void)alloc;
+			#ifdef DEBUG_MODE
 				Debug::Log << "Default iterator called" << std::endl;
 			#endif
 		}
 
 		template <class InputIterator>
 		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp) {
-			#ifdef DEBUG
+			(void)alloc;
+			#ifdef DEBUG_MODE
 				Debug::Log << "Range Constructor called" << std::endl;
 			#endif
 
 			this->_range_copy(first, last);
 		}
 
-		map (const map& x) : _M_tree(key_compare(), allocator_type()) {
-			#ifdef DEBUG
+		map (const map& x) : _M_tree(key_compare()) {
+			#ifdef DEBUG_MODE
 				Debug::Log << "Copy Constructor called" << std::endl;
 			#endif
 			
@@ -289,6 +290,8 @@ namespace ft
 			return *this;
 		}
 
+	private:
+
 		template <class InputIterator>
 		void _range_copy(InputIterator first, InputIterator last) {
 			for (; first != last; first++) {
@@ -298,13 +301,6 @@ namespace ft
 				#endif
 			}
 		}
-
-	/* #endregion */
-
-	public:
-		ft::node< value_type > *root() { return _M_tree.root(); }
-
-	/* #region iterators */
 
 	public:
 		iterator begin() { return iterator(_M_tree.smallest() ); }

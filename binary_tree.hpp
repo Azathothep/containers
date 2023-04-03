@@ -46,22 +46,21 @@ namespace ft {
 			#endif
 
 		public:
-			#ifdef DEBUG_MODE
-			binary_tree(const compare_type &comp = compare_type(), const allocator_type &alloc = allocator_type()) : size(0), _root(NULL), _printer(Debug::Log)
-			#else
-			binary_tree(const compare_type &comp = compare_type(), const allocator_type &alloc = allocator_type()) : size(0), _root(NULL), _M_key(key_getter())
-			#endif
+		#ifdef DEBUG_MODE
+			binary_tree(const compare_type &comp = compare_type()) : size(0), _root(NULL), _printer(Debug::Log)
+		#else
+			binary_tree(const compare_type &comp = compare_type()) : size(0), _root(NULL), _M_key(key_getter())
+		#endif
 			{
 				this->_M_comp = comp;
-				this->_M_alloc = alloc;
 				this->_god_p = &this->_god;
 			}
 
-			#ifdef DEBUG_MODE
+		#ifdef DEBUG_MODE
 			binary_tree(value_type const & val, const compare_type &comp = compare_type()) : size(0), _printer(Debug::Log)
-			#else
+		#else
 			binary_tree(value_type const & val, const compare_type &comp = compare_type()) : size(0)
-			#endif
+		#endif
 			{
 				this->_M_comp = comp;
 				this->_god_p = &this->_god;
