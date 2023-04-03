@@ -14,7 +14,8 @@
 # include "ft/lexicographical_compare.hpp"
 
 # include "node.hpp"
-# include "b_tree.hpp"
+//# include "b_tree.hpp"
+# include "binary_tree.hpp"
 
 namespace ft
 {
@@ -193,6 +194,17 @@ namespace ft
 
 	/* #endregion */
 
+	/* #region key_getter */
+	template <class value_type>
+	class map_key_getter {
+		public:
+			typedef typename value_type::first_type 	key_type;
+
+			key_type const & get(value_type const & val) const { return val.first; }
+	};
+
+	/* #endregion */
+
 	/* #region map */
 
 	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::pair< const Key, T > > >
@@ -202,7 +214,6 @@ namespace ft
 	private:
 
 		typedef ft::map<Key, T, Compare, Alloc> 						base;
-		typedef ft::B_TREE<Key, T, Compare>								B_tree;
 
 	public:
 
@@ -229,20 +240,23 @@ namespace ft
 	/* #endregion */
 
 	private:
-		B_tree _M_tree;
+		typedef ft::map_key_getter< value_type >						key_getter;
+		typedef ft::binary_tree<value_type, key_getter, Compare >	binary_tree;
+
+		binary_tree _M_tree;
 		key_compare _M_comp;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp, alloc) {
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp) {
 			#ifdef DEBUG
 				Debug::Log << "Default iterator called" << std::endl;
 			#endif
 		}
 
 		template <class InputIterator>
-		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp, alloc) {
+		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp) {
 			#ifdef DEBUG
 				Debug::Log << "Range Constructor called" << std::endl;
 			#endif
