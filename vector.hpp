@@ -194,7 +194,7 @@ namespace ft
 	private:
 		#define __NOTIFY_GROWTH(n) this->_M_data._M_finish += n
 		#define __NOTIFY_SHRINK(n) this->_M_data._M_finish -= n
-		#define BASE_CAPACITY 5
+		#define BASE_CAPACITY 1
 
 		struct _VECTOR_DATA
 		{

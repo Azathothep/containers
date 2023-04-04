@@ -1,11 +1,6 @@
 #ifndef BINARY_TREE_HPP
 # define BINARY_TREE_HPP
 
-# ifdef DEBUG_MODE
-#	include "Debug.hpp"
-#	include "print_tree.hpp"
-# endif
-
 # include "ft/pair.hpp"
 # include "node.hpp"
 
@@ -17,10 +12,6 @@ namespace ft {
 		#define		KEY(v) this->_M_key.get(v)
 		#define		NIL &(this->_nil)
 		#define		GET_COLOR(n) (char)(((node *)n == NULL) ? BLACK_NODE : n->color)
-
-		#ifdef DEBUG_MODE
-			# define PRINT_TREE _printer.print(*this)
-		#endif
 
 		public:
 			typedef T											value_type;
@@ -34,39 +25,26 @@ namespace ft {
 			int						size;
 
 		private:
-			node 					*_root;
-			node					*_god_p;
-			node					_god;
-			node					_nil;
 			key_getter				_M_key;
 			compare_type			_M_comp;
 			allocator_type		 	_M_alloc;
 
-			#ifdef DEBUG_MODE
-				ft::Tree_Printer<ft::integral_printer>		_printer;
-			#endif
+			node 					*_root;
+			node					*_god_p;
+			node					_god;
+			node					_nil;
 
 		public:
-		#ifdef DEBUG_MODE
-			binary_tree(const compare_type &comp = compare_type()) : size(0), _root(NULL), _printer(Debug::Log)
-		#else
-			binary_tree(const compare_type &comp = compare_type()) : size(0), _root(NULL), _M_key(key_getter())
-		#endif
-			{
-				this->_M_comp = comp;
+
+			binary_tree(const compare_type &comp = compare_type()) : size(0), _M_key(key_getter()), _M_comp(comp), _root(NULL) {
 				this->_god_p = &this->_god;
 			}
 
 			~binary_tree() {
 				this->destroy_all();
-				size = 0;
 			}
 
 			void swap(binary_tree & rhs) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "B_TREE swap called" << std::endl;
-				#endif
-
 				node *t_root = this->_root;
 				
 				this->_root = rhs._root;
@@ -83,67 +61,27 @@ namespace ft {
 				rhs.size = t_size;
 			}
 
-			compare_type key_comp() const { return _M_comp; }
-
 			void destroy_all() {
-				if (this->root())
+				if (this->_root)
 					this->_move_destroy(this->_root);
 
 				this->_god.left = NULL;
 				this->_root = NULL;
-
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
-			}
-
-			void _move_destroy(node *current) {
-				if (current->left)
-					_move_destroy(current->left);
-				if (current->right)
-					_move_destroy(current->right);
-				
-				this->_delete_allocated(current);
 			}
 
 			node *get_node(key_type const & key) const {
-				node *n = this->root();
+				node *n = this->_root;
 
-				return get_node(key, n);
-			}
-
-			node *get_node(key_type const & key, node *n) const {
-				if(n == NULL)
-					return n;
-
-				#ifdef DEBUG_MODE
-					Debug::Log << "B_Tree: foward_node: checking node of key " << n->value.first << std::endl;
-				#endif
-
-				if (this->_M_comp(key, KEY(n->value))) // if key < n
-					return get_node(key, n->left);
-				else if (this->_M_comp(KEY(n->value), key)) // if key > n
-					return get_node(key, n->right);
-
-				return n;
+				return this->_get_node_recursive(key, n);
 			}
 
 			node *insert(value_type *val) {
 				node *n = this->_create_node(val);
 
 				if (this->_root) {
-					#ifdef DEBUG_MODE
-						Debug::Log << "Move_inserting node" << std::endl;
-					#endif
-
 					this->_move_insert(&this->_root, n);
 				}
-				else
-				{
-					#ifdef DEBUG_MODE
-						Debug::Log << "Replacing root" << std::endl;
-					#endif
-
+				else {
 					this->_root = n;
 					this->_root->color = BLACK_NODE;
 
@@ -159,9 +97,9 @@ namespace ft {
 			node *insert_from(value_type *val, value_type *from) {				
 				node *to_insert;
 				
-				to_insert = this->get_node(KEY(from), this->root());
+				to_insert = this->get_node(KEY(from));
 				
-				if (to_insert && _M_comp(KEY(val), KEY(from))) {
+				if (to_insert && this->_M_comp(KEY(val), KEY(from))) {
 					node *n = this->_create_node(val);
 					this->_move_insert(&n, to_insert, to_insert->parent);
 					return n;
@@ -170,29 +108,17 @@ namespace ft {
 				return insert(val);
 			}
 
-			bool erase(key_type const & key) {
-				node *n = get_node(key, this->root());
-
-				if (n == NULL)
-					return false;
-
-				this->_erase_node(n);
-
-				return true;
-			}
-
 			void erase(node *n) {
 				this->_erase_node(n);
 			}
 
 			node *smallest() const {
-				node *n = this->root();
+				node *n = this->_root;
 
 				if (n == NULL)
 					return past_the_end();
 				
-				if (n->left)
-				{
+				if (n->left) {
 					n = n->left;
 					while (n->left)
 						n = n->left;
@@ -205,27 +131,37 @@ namespace ft {
 				return this->_god_p;
 			}
 
-			node *root() const { return this->_root; }
-
 			size_type max_size() const { return this->_M_alloc.max_size(); }
 
 		private:
 
 		/* #region utils */
 
+			node *_get_node_recursive(key_type const & key, node *n) const {
+				if (n == NULL)
+					return n;
+
+				if (this->_M_comp(key, KEY(n->value))) // if key < n
+					return this->_get_node_recursive(key, n->left);
+				else if (this->_M_comp(KEY(n->value), key)) // if key > n
+					return this->_get_node_recursive(key, n->right);
+
+				return n;
+			}
+
 			void _replace(node *n, node *r) {
 				node *p = n->parent;
 				
-				if (p == &(this->_god)) {
+				if (p == this->_god_p) {
 					this->_root = r;
 					this->_god.left = this->_root;
-				}
-				else if (n == p->left)
+				} else if (n == p->left)
 					p->left = r;
 				else if (n == p->right)
 					p->right = r;
 
-				if (r) r->parent = p;
+				if (r)
+					r->parent = p;
 			}
 
 			void _swap_colors(node *n1, node *n2) {
@@ -235,13 +171,6 @@ namespace ft {
 			}
 
 			void _delete_allocated(node *n) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Deleting node of key " << n->value.first << std::endl;
-				#endif
-
-				n->left = NULL;
-				n->right = NULL;
-				n->parent = NULL;
 				_M_alloc.destroy(n);
 				_M_alloc.deallocate(n, 1);
 				n = NULL;
@@ -252,6 +181,15 @@ namespace ft {
 				node *n = _M_alloc.allocate(1);
 				_M_alloc.construct(n, node(val));
 				return n;
+			}
+
+			void _move_destroy(node *current) {
+				if (current->left)
+					_move_destroy(current->left);
+				if (current->right)
+					_move_destroy(current->right);
+				
+				this->_delete_allocated(current);
 			}
 
 		/* #endregion */
@@ -274,29 +212,13 @@ namespace ft {
 			void _emplace_node(node **current, node *insert, node *parent) {
 				*current = insert;
 				insert->parent = parent;
-				#ifdef DEBUG_MODE
-					Debug::Log << "Map: inserting element" << std::endl;
-				#endif
 
 				this->_recolor(insert);
-
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
 			}
 
 			void _recolor(node *n) {
 				if (n == this->_root) {
-					#ifdef DEBUG_MODE
-						Debug::Log << "Map: recolouring root" << std::endl;
-					#endif
-
 					n->color = BLACK_NODE;
-
-					#ifdef DEBUG_MODE
-						PRINT_TREE;
-					#endif
-					
 					return;
 			 	} 
 				
@@ -311,17 +233,10 @@ namespace ft {
 					n->parent->color = BLACK_NODE;
 					n->aunt()->color = BLACK_NODE;
 					n->grandparent()->color = RED_NODE;
-					#ifdef DEBUG_MODE
-						PRINT_TREE;
-					#endif
 
 					this->_recolor(n->grandparent());
 				}
 				else {
-					#ifdef DEBUG_MODE
-						Debug::Log << "Map: need rotation from " << n->value.first << std::endl;
-					#endif
-
 					this->_perform_rotation(n);
 				}
 			}
@@ -330,56 +245,22 @@ namespace ft {
 				node *p = n->parent;
 				node *g = n->grandparent();
 
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
-
 				if (p == g->left && n == p->left)
 				{
-					#ifdef DEBUG_MODE
-						Debug::Log << "DETECTING LL CASE" << std::endl;
-					#endif
-
 					this->_rotate_right(g);
 					this->_swap_colors(g, p);
-				}
-				else if (p == g->right && n == p->right)
-				{
-					#ifdef DEBUG_MODE
-						Debug::Log << "DETECTING RR CASE" << std::endl;
-					#endif
-					
+				} else if (p == g->right && n == p->right) {	
 					this->_rotate_left(g);
 					this->_swap_colors(g, p);
-				}
-				else if (p == g->left && n == p->right)
-				{
-					#ifdef DEBUG_MODE
-						Debug::Log << "DETECTING LR CASE" << std::endl;
-					#endif
-					
+				} else if (p == g->left && n == p->right) {
 					this->_rotate_left(p);
 					this->_rotate_right(g);
 					this->_swap_colors(g, n);
-				}
-				else if (p == g->right && n == p->left)
-				{
-					#ifdef DEBUG_MODE
-						Debug::Log << "DETECTING RL CASE" << std::endl;
-					#endif
-					
+				} else if (p == g->right && n == p->left) {
 					this->_rotate_right(p);
 					this->_rotate_left(g);
 					this->_swap_colors(g, n);
 				}
-				#ifdef DEBUG_MODE
-				else
-					Debug::Log << "No case found, " << p->value.first << ",  " << g->value.first << std::endl;
-				#endif
-
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
 			}
 
 		/* #endregion */
@@ -387,10 +268,6 @@ namespace ft {
 		/* #region rotations */
 
 			void _rotate_left(node *n) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Map: rotate left" << std::endl;
-				#endif
-				
 				node *traitor = n->right;
 				node *vassal = traitor->left;
 
@@ -400,17 +277,9 @@ namespace ft {
 				n->right = vassal;
 				if (vassal)
 					vassal->parent = n;
-
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
 			}
 
 			void _rotate_right(node *n) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Map: rotate right" << std::endl;
-				#endif
-				
 				node *traitor = n->left;
 				node *vassal = traitor->right;
 
@@ -420,10 +289,6 @@ namespace ft {
 				n->left = vassal;
 				if (vassal)
 					vassal->parent = n;
-
-				#ifdef DEBUG_MODE
-					PRINT_TREE;
-				#endif
 			}
 
 		/* #endregion */
@@ -434,21 +299,11 @@ namespace ft {
 				char originalColor = n->color;
 
 				node *heir = this->_delete_node(n, &originalColor);
-			
-				#ifdef DEBUG_MODE
-					Debug::Log << "OriginalColor is " << (int)originalColor << std::endl;
-				#endif
 
 				if (originalColor == BLACK_NODE) {
 					if (GET_COLOR(heir) == RED_NODE)
-					{
-						#ifdef DEBUG_MODE
-							Debug::Log << "PAINTING RED HEIR " << KEY(heir->value) << " IN BLACK" << std::endl;
-						#endif
-
 						heir->color = BLACK_NODE;
-					}
-					else if (heir == this->root())
+					else if (heir == this->_root)
 						heir->color = BLACK_NODE;
 					else
 						this->_solve_double_black(heir);
@@ -456,18 +311,9 @@ namespace ft {
 
 				if (heir == NIL)
 					this->_replace(heir, NULL);
-				
-				#ifdef DEBUG_MODE
-					Debug::Log << "Erasure complete" << std::endl;
-					PRINT_TREE;
-				#endif
 			}
 
 			node *_delete_node(node *n, char *originalColor) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Deleting node" << std::endl;
-				#endif
-
 				if (!n->left && !n->right)
 					return _delete_leaf(n);
 				else if (!n->left || !n->right)
@@ -476,10 +322,6 @@ namespace ft {
 			}
 
 			node *_delete_leaf(node *n) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Deleting leaf" << std::endl;
-				#endif
-
 				this->_replace(n, NIL);
 				this->_delete_allocated(n);
 
@@ -487,10 +329,6 @@ namespace ft {
 			}
 
 			node *_delete_one_child(node *n) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Deleting one child" << std::endl;
-				#endif
-				
 				node *child = n->left;
 				if (n->left == NULL)
 					child = n->right;
@@ -501,18 +339,10 @@ namespace ft {
 			}
 
 			node *_delete_two_children(node *n, char *originalColor) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "Deleting two children" << std::endl;
-				#endif
-
 				node *subnode = n->left; // n->right
 
 				while (subnode->right) // subnode->left
 					subnode = subnode->right; // subnode->left
-
-				#ifdef DEBUG_MODE
-					Debug::Log << "Subnode key: " << KEY(subnode->value) << std::endl;
-				#endif
 
 				node *heir = subnode->left; // subnode->right
 				if (heir == NULL)
@@ -523,10 +353,6 @@ namespace ft {
 				this->_inherit(n, subnode);
 				
 				*originalColor = subnode->color; // TO VERIFY
-
-				#ifdef DEBUG_MODE
-					Debug::Log << "Replacing subnode color by " << (int)n->color << std::endl;
-				#endif
 
 				subnode->color = n->color;
 
@@ -553,11 +379,6 @@ namespace ft {
 			/* #region double black */
 
 			void _solve_double_black(node *db) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "SOLVING DOUBLE BLACK ON: " << KEY(db->value) << std::endl;
-					PRINT_TREE;
-				#endif
-
 				node *sibling = db->sibling();
 				bool child_status = db->child_status();
 
@@ -584,10 +405,6 @@ namespace ft {
 			}
 
 			void _red_sibling_case(node *db, bool child_status) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "ENTERING RED SIBLING CASE" << std::endl;
-				#endif
-
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
@@ -602,10 +419,6 @@ namespace ft {
 			}
 
 			void _black_family_case(node *db) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "ENTERING BLACK FAMILY CASE" << std::endl;
-				#endif
-				
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
@@ -617,28 +430,18 @@ namespace ft {
 			}
 
 			void _close_nephew_red_case(node *db, bool child_status) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "ENTERING CLOSE NEPHEW RED CASE" << std::endl;
-				#endif
-
 				node *sibling = db->sibling();
 
-				if (child_status == LEFT_CHILD)
-				{
+				if (child_status == LEFT_CHILD) {
 					this->_swap_colors(sibling, sibling->left);
 					this->_rotate_right(sibling);
-				}
-				else {
+				} else {
 					this->_swap_colors(sibling, sibling->right);
 					this->_rotate_left(sibling);
 				}
 			}
 
 			void _far_nephew_red_case(node *db, bool child_status) {
-				#ifdef DEBUG_MODE
-					Debug::Log << "ENTERING FAR NEWPHEW RED CASE" << std::endl;
-				#endif
-
 				node *sibling = db->sibling();
 				node *parent = db->parent;
 
@@ -648,8 +451,7 @@ namespace ft {
 				if (child_status == LEFT_CHILD) {
 					sibling->right->color = BLACK_NODE;
 					this->_rotate_left(parent);
-				}
-				else {
+				} else {
 					sibling->left->color = BLACK_NODE;
 					this->_rotate_right(parent);
 				}

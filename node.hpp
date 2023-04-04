@@ -21,6 +21,12 @@ namespace ft {
 
 		node(T *v) : color(RED_NODE), value(v), parent(NULL), right(NULL), left(NULL) { }
 
+		~node() {
+			this->parent = NULL;
+			this->left = NULL;
+			this->right = NULL;
+		}
+
 		node *grandparent() {
 			if (this->parent)
 				return this->parent->parent;

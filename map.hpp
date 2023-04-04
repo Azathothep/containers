@@ -1,10 +1,6 @@
 #ifndef MAP_HPP
 # define MAP_HPP
 
-# ifdef DEBUG_MODE
-#	include "Debug.hpp"
-# endif
-
 # include "ft/pair.hpp"
 # include "ft/make_pair.hpp"
 # include "ft/is_const.hpp"
@@ -14,7 +10,6 @@
 # include "ft/lexicographical_compare.hpp"
 
 # include "node.hpp"
-//# include "b_tree.hpp"
 # include "binary_tree.hpp"
 
 namespace ft
@@ -39,7 +34,6 @@ namespace ft
 	public:
 		map_iterator(node *n = NULL) : _m_node(n) {}
 
-		// check const to non-const
 		template <bool c>
 		map_iterator(const map_iterator<T, c> &rhs) {
 			*this = rhs;
@@ -241,35 +235,21 @@ namespace ft
 
 		typedef ft::binary_tree<value_type, map_key_getter, key_compare>		binary_tree;
 
-		binary_tree _M_tree;
-		key_compare _M_comp;
-		allocator_type _M_alloc;
+		key_compare 		_M_comp;
+		allocator_type		_M_alloc;
+		binary_tree 		_M_tree;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp), _M_comp(comp), _M_alloc(alloc) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Default iterator called" << std::endl;
-			#endif
-		}
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_comp(comp), _M_alloc(alloc), _M_tree(comp) {}
 
 		template <class InputIterator>
-		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp), _M_comp(comp), _M_alloc(alloc) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Range Constructor called" << std::endl;
-			#endif
-
+		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_comp(comp), _M_alloc(alloc), _M_tree(comp) {
 			this->_range_copy(first, last);
 		}
 
-		map (const map& x) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Copy Constructor called" << std::endl;
-			#endif
-			this->_M_comp = x._M_comp;
-			this->_M_alloc = x._M_alloc;
-
+		map (const map& x) : _M_comp(x._M_comp), _M_alloc(x._M_alloc), _M_tree(x._M_comp) {
 			*this = x;
 		}
 
@@ -278,10 +258,6 @@ namespace ft
 		}
 
 		map& operator=(const map& x) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Operator= called" << std::endl;
-			#endif
-
 			if (this == &x)
 				return *this;
 
@@ -290,18 +266,6 @@ namespace ft
 			this->_range_copy(x.begin(), x.end());
 
 			return *this;
-		}
-
-	private:
-
-		template <class InputIterator>
-		void _range_copy(InputIterator first, InputIterator last) {
-			for (; first != last; first++) {
-				this->insert(*first);
-				#ifdef DEBUG_MODE
-					Debug::Log << "Copied pair of key " << first->first << " and value " << first->second << std::endl;
-				#endif
-			}
 		}
 
 	public:
@@ -341,11 +305,7 @@ namespace ft
 
 	public:
 		mapped_type& operator[] (const key_type& k) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Map: operator[" << k << "]" << std::endl;
-			#endif
-
-			ft::node< value_type > *n = _M_tree.get_node(k);
+			typename binary_tree::node *n = _M_tree.get_node(k);
 
 			if (n)
 				return n->value->second;
@@ -356,7 +316,7 @@ namespace ft
 		}
 
 		mapped_type& at (const key_type& k) {
-			ft::node< value_type > *n = _M_tree.get_node(k);
+			typename binary_tree::node *n = _M_tree.get_node(k);
 
 			if (n == NULL)
 				throw std::out_of_range("map: at");
@@ -365,7 +325,7 @@ namespace ft
 		}
 
 		const mapped_type& at (const key_type& k) const {
-			ft::node< value_type > *n = _M_tree.get_node(k);
+			typename binary_tree::node *n = _M_tree.get_node(k);
 
 				if (n == NULL)
 					throw std::out_of_range("map: at");
@@ -386,9 +346,27 @@ namespace ft
 			return p;
 		}
 
+		template <class InputIterator>
+		void _range_copy(InputIterator first, InputIterator last) {
+			for (; first != last; first++) {
+				this->insert(*first);
+			}
+		}
+
+		void _delete_value(pointer p) {
+			this->_M_alloc.destroy(p);
+			this->_M_alloc.deallocate(p, 1);
+		}
+
+		void _deep_delete(typename binary_tree::node *n) {
+			pointer p = n->value;
+			this->_M_tree.erase(n);
+			this->_delete_value(p);
+		}
+
 	public:
 		ft::pair<iterator, bool> insert (const value_type& val) {
-			ft::node<value_type> *n = _M_tree.get_node(val.first);
+			typename binary_tree::node *n = _M_tree.get_node(val.first);
 
 			if (n)
 				return ft::pair<iterator, bool>(iterator(n), false);
@@ -401,7 +379,7 @@ namespace ft
 		}
 
 		iterator insert (iterator position, const value_type& val) {
-			ft::node<value_type> *n = _M_tree.get_node(val.first);
+			typename binary_tree::node *n = _M_tree.get_node(val.first);
 			
 			if (n == NULL) {
 				pointer p = this->_create_value(val);
@@ -420,57 +398,37 @@ namespace ft
 			this->_range_copy(first, last);
 		}
 
-	private:
-		void _delete_pair(pointer p) {
-			this->_M_alloc.destroy(p);
-			this->_M_alloc.deallocate(p, 1);
-		}
-
 	public:
 
 		void erase (iterator position) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Erasing node of key " << position->first << std::endl;
-			#endif
-			ft::node< value_type> *n = _M_tree.get_node(position->first);
-			pointer p = n->value;
-			_M_tree.erase(n);
-			this->_delete_pair(p);
+			typename binary_tree::node *n = _M_tree.get_node(position->first);
+			this->_deep_delete(n);
 		}
 
 		size_type erase (const key_type& k) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Erasing node of key " << k << std::endl;
-			#endif
-			
-			ft::node< value_type > *n = _M_tree.get_node(k);
-			if (n) {
-				pointer p = n->value;
-				_M_tree.erase(n);
-				this->_delete_pair(p);
-				return 1;
-			}
+			typename binary_tree::node *n = _M_tree.get_node(k);
 
-			return 0;
+			if (n == NULL)
+				return 0;
+
+			this->_deep_delete(n);
+
+			return 1;
 		}
 
 		void erase (iterator first, iterator last) {
-			#ifdef DEBUG_MODE
-				Debug::Log << "Range erasor called, from " << first->first << " to " << last->first << std::endl;
-			#endif
-
 			while (first != last) {
 				iterator to_del = first;
 				first++;
-				ft::node< value_type> *n = _M_tree.get_node(to_del->first);
-				pointer p = n->value;
-				_M_tree.erase(n);
-				this->_delete_pair(p);
+
+				typename binary_tree::node *n = _M_tree.get_node(to_del->first);
+
+				this->_deep_delete(n);
 			}
 		}
 
 		void swap (map& x) {
-			_M_tree.swap(x._M_tree);
+			this->_M_tree.swap(x._M_tree);
 		}
 
 		void clear() {
@@ -478,10 +436,10 @@ namespace ft
 			iterator ite = end();
 
 			for (; it != ite; it++) {
-				this->_delete_pair(&(*it));
+				this->_delete_value(&(*it));
 			}
 
-			_M_tree.destroy_all();
+			this->_M_tree.destroy_all();
 		}
 
 	/* #endregion */
@@ -504,7 +462,7 @@ namespace ft
 				}		
 		};
 
-		key_compare key_comp() const { return _M_tree.key_comp(); }
+		key_compare key_comp() const { return this->_M_comp; }
 
 		value_compare value_comp() const { return value_compare(_M_comp); }
 
@@ -514,7 +472,7 @@ namespace ft
 
 	// public:
 	 	iterator find (const key_type& k) {
-			ft::node< value_type > *n = _M_tree.get_node(k);
+			typename binary_tree::node *n = _M_tree.get_node(k);
 			
 			if (n == NULL)
 				n = _M_tree.past_the_end();
@@ -523,7 +481,7 @@ namespace ft
 		}
 
 	 	const_iterator find (const key_type& k) const {
-			ft::node< value_type > *n = _M_tree.get_node(k);
+			typename binary_tree::node *n = _M_tree.get_node(k);
 			
 			if (n == NULL)
 				n = _M_tree.past_the_end();
@@ -532,7 +490,7 @@ namespace ft
 		}
 
 	 	size_type count (const key_type& k) const {
-			ft::node< value_type > *n = this->_M_tree.get_node(k);
+			typename binary_tree::node *n = this->_M_tree.get_node(k);
 			
 			if (n)
 				return 1;
