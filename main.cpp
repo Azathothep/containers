@@ -43,6 +43,7 @@ int main() {
 	my_map.insert( NS::make_pair(4, 'q') );
 
 	//printer.print(my_map);
+	NS::map<int, char>::iterator itc = my_map.cbegin();
 
 	NS::map<int, char>::iterator it = my_map.begin();
 	it++;

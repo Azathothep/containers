@@ -11,10 +11,10 @@
 
 namespace ft {
 
-	template < class T, class Getter, class Compare, class Alloc = std::allocator< ft::node < T > > >
+	template < class T, class Getter, class Compare, class Alloc = std::allocator < ft::node < T > > >
 	class binary_tree {
 		
-		#define		KEY(n) this->_M_key.get(((node *)n)->value)
+		#define		KEY(v) this->_M_key.get(v)
 		#define		NIL &(this->_nil)
 		#define		GET_COLOR(n) (char)(((node *)n == NULL) ? BLACK_NODE : n->color)
 
@@ -25,10 +25,11 @@ namespace ft {
 		public:
 			typedef T											value_type;
 			typedef Getter										key_getter;
-			typedef Alloc 										allocator_type;
+			typedef Alloc				 						allocator_type;
 			typedef Compare 									compare_type;
 			typedef typename key_getter::key_type				key_type;
 			typedef typename ft::node< value_type > 			node;
+			typedef typename allocator_type::size_type			size_type;
 
 			int						size;
 
@@ -38,8 +39,8 @@ namespace ft {
 			node					_god;
 			node					_nil;
 			key_getter				_M_key;
-			allocator_type 			_M_alloc;
 			compare_type			_M_comp;
+			allocator_type		 	_M_alloc;
 
 			#ifdef DEBUG_MODE
 				ft::Tree_Printer<ft::integral_printer>		_printer;
@@ -54,18 +55,6 @@ namespace ft {
 			{
 				this->_M_comp = comp;
 				this->_god_p = &this->_god;
-			}
-
-		#ifdef DEBUG_MODE
-			binary_tree(value_type const & val, const compare_type &comp = compare_type()) : size(0), _printer(Debug::Log)
-		#else
-			binary_tree(value_type const & val, const compare_type &comp = compare_type()) : size(0)
-		#endif
-			{
-				this->_M_comp = comp;
-				this->_god_p = &this->_god;
-
-				this->insert(val);
 			}
 
 			~binary_tree() {
@@ -95,8 +84,6 @@ namespace ft {
 			}
 
 			compare_type key_comp() const { return _M_comp; }
-
-			allocator_type get_allocator() const { return _M_alloc; }
 
 			void destroy_all() {
 				if (this->root())
@@ -133,25 +120,16 @@ namespace ft {
 					Debug::Log << "B_Tree: foward_node: checking node of key " << n->value.first << std::endl;
 				#endif
 
-				if (this->_M_comp(key, KEY(n))) // if key < n
+				if (this->_M_comp(key, KEY(n->value))) // if key < n
 					return get_node(key, n->left);
-				else if (this->_M_comp(KEY(n), key)) // if key > n
+				else if (this->_M_comp(KEY(n->value), key)) // if key > n
 					return get_node(key, n->right);
 
 				return n;
 			}
 
-			ft::pair< ft::node<value_type> *, bool> insert(value_type const & val) {
-				node *n = this->get_node(val.first, this->root());
-				ft::pair< ft::node<value_type> *, bool> return_pair;
-				
-				if (n) {
-					return_pair.first = n;
-					return_pair.second = false;
-					return return_pair;
-				}
-
-				n = this->_create_node(val);
+			node *insert(value_type *val) {
+				node *n = this->_create_node(val);
 
 				if (this->_root) {
 					#ifdef DEBUG_MODE
@@ -174,28 +152,22 @@ namespace ft {
 				}
 
 				size++;
-				
-				return_pair.first = n;
-				return_pair.second = true;
 
-				return return_pair;
+				return n;
 			}
 
-			node *insert_from(value_type const & val, key_type const & from) {
-				node *n = this->get_node(val.first, this->root());
-
-				if (n)
-					return n;
+			node *insert_from(value_type *val, value_type *from) {				
+				node *to_insert;
 				
-				node *to_insert = this->get_node(from, this->root());
-
-				if (to_insert && _M_comp(to_insert->value.first, from)) {
-					n = this->_create_node(val);
+				to_insert = this->get_node(KEY(from), this->root());
+				
+				if (to_insert && _M_comp(KEY(val), KEY(from))) {
+					node *n = this->_create_node(val);
 					this->_move_insert(&n, to_insert, to_insert->parent);
 					return n;
 				}
 
-				return insert(val).first;
+				return insert(val);
 			}
 
 			bool erase(key_type const & key) {
@@ -207,6 +179,10 @@ namespace ft {
 				this->_erase_node(n);
 
 				return true;
+			}
+
+			void erase(node *n) {
+				this->_erase_node(n);
 			}
 
 			node *smallest() const {
@@ -230,6 +206,8 @@ namespace ft {
 			}
 
 			node *root() const { return this->_root; }
+
+			size_type max_size() const { return this->_M_alloc.max_size(); }
 
 		private:
 
@@ -270,7 +248,7 @@ namespace ft {
 				size--;
 			}
 
-			node *_create_node(value_type const & val) {
+			node *_create_node(value_type *val) {
 				node *n = _M_alloc.allocate(1);
 				_M_alloc.construct(n, node(val));
 				return n;
@@ -287,7 +265,7 @@ namespace ft {
 					return;
 				}
 				
-				if (this->_M_comp(KEY(*current), KEY(insert))) // if current < insert
+				if (this->_M_comp(KEY((*current)->value), KEY(insert->value))) // if current < insert
 					this->_move_insert(&((*current)->right), insert, *current);
 				else
 					this->_move_insert(&((*current)->left), insert, *current);
@@ -465,7 +443,7 @@ namespace ft {
 					if (GET_COLOR(heir) == RED_NODE)
 					{
 						#ifdef DEBUG_MODE
-							Debug::Log << "PAINTING RED HEIR " << KEY(heir) << " IN BLACK" << std::endl;
+							Debug::Log << "PAINTING RED HEIR " << KEY(heir->value) << " IN BLACK" << std::endl;
 						#endif
 
 						heir->color = BLACK_NODE;
@@ -533,7 +511,7 @@ namespace ft {
 					subnode = subnode->right; // subnode->left
 
 				#ifdef DEBUG_MODE
-					Debug::Log << "Subnode key: " << KEY(subnode) << std::endl;
+					Debug::Log << "Subnode key: " << KEY(subnode->value) << std::endl;
 				#endif
 
 				node *heir = subnode->left; // subnode->right
@@ -576,7 +554,7 @@ namespace ft {
 
 			void _solve_double_black(node *db) {
 				#ifdef DEBUG_MODE
-					Debug::Log << "SOLVING DOUBLE BLACK ON: " << KEY(db) << std::endl;
+					Debug::Log << "SOLVING DOUBLE BLACK ON: " << KEY(db->value) << std::endl;
 					PRINT_TREE;
 				#endif
 

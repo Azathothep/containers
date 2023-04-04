@@ -11,16 +11,15 @@ namespace ft {
 
 	template <typename T>
 	struct node {
-
 		char color;
-		T value;
+		T *value;
 		struct node *parent;
 		struct node *right;
 		struct node *left;
 
-		node() : color(BLACK_NODE), parent(NULL), right(NULL), left(NULL) { }
+		node() : color(BLACK_NODE), value(NULL), parent(NULL), right(NULL), left(NULL) { }
 
-		node(T const & v) : color(RED_NODE), value(v), parent(NULL), right(NULL), left(NULL) { }
+		node(T *v) : color(RED_NODE), value(v), parent(NULL), right(NULL), left(NULL) { }
 
 		node *grandparent() {
 			if (this->parent)

@@ -23,9 +23,6 @@ namespace ft
 
 	template <typename T, bool constness = false>
 	class map_iterator {
-	
-	#define LEFT_BRANCH 0
-	#define RIGHT_BRANCH 1
 
 	public:
 		typedef typename std::forward_iterator_tag 											iterator_category;
@@ -50,6 +47,8 @@ namespace ft
 
 		template <bool c>
 		map_iterator &operator=(const map_iterator<T, c> &rhs) {
+			reference r = *rhs;
+			(void)r;
 			this->_m_node = rhs.data();
 			return *this;
 		}
@@ -59,11 +58,11 @@ namespace ft
 		node *data() const { return this->_m_node; }
 
 		reference operator*() const {
-			return _m_node->value;
+			return *(_m_node->value);
 		}
 
 		pointer operator->() const {
-			return &(_m_node->value);
+			return _m_node->value;
 		}
 
 		map_iterator &operator++() {
@@ -237,27 +236,26 @@ namespace ft
 			public:
 				typedef typename value_type::first_type 						key_type;
 
-				key_type const & get(value_type const & val) const { return val.first; }
+				key_type const & get(value_type const *val) const { return val->first; }
 		};
 
 		typedef ft::binary_tree<value_type, map_key_getter, key_compare>		binary_tree;
 
 		binary_tree _M_tree;
 		key_compare _M_comp;
+		allocator_type _M_alloc;
 
 	/* #region intialization */
 
 	public:
-		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp) {
-			(void)alloc;
+		explicit map (const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type()) : _M_tree(comp), _M_comp(comp), _M_alloc(alloc) {
 			#ifdef DEBUG_MODE
 				Debug::Log << "Default iterator called" << std::endl;
 			#endif
 		}
 
 		template <class InputIterator>
-		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp) {
-			(void)alloc;
+		map (InputIterator first, InputIterator last, const key_compare& comp = key_compare(), const allocator_type& alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_tree(comp), _M_comp(comp), _M_alloc(alloc) {
 			#ifdef DEBUG_MODE
 				Debug::Log << "Range Constructor called" << std::endl;
 			#endif
@@ -265,15 +263,19 @@ namespace ft
 			this->_range_copy(first, last);
 		}
 
-		map (const map& x) : _M_tree(key_compare()) {
+		map (const map& x) {
 			#ifdef DEBUG_MODE
 				Debug::Log << "Copy Constructor called" << std::endl;
 			#endif
-			
+			this->_M_comp = x._M_comp;
+			this->_M_alloc = x._M_alloc;
+
 			*this = x;
 		}
 
-		~map() { }
+		~map() {
+			this->clear();
+		}
 
 		map& operator=(const map& x) {
 			#ifdef DEBUG_MODE
@@ -330,7 +332,7 @@ namespace ft
 		};
 
 		size_type max_size() const {
-			return _M_tree.get_allocator().max_size();
+			return this->_M_tree.max_size();
 		};
 
 	/* #endregion */
@@ -346,7 +348,7 @@ namespace ft
 			ft::node< value_type > *n = _M_tree.get_node(k);
 
 			if (n)
-				return n->value.second;
+				return n->value->second;
 
 			ft::pair<iterator, bool> new_node = this->insert( value_type(k, mapped_type()) );
 
@@ -359,7 +361,7 @@ namespace ft
 			if (n == NULL)
 				throw std::out_of_range("map: at");
 
-			return n->value.second;
+			return n->value->second;
 		}
 
 		const mapped_type& at (const key_type& k) const {
@@ -368,26 +370,49 @@ namespace ft
 				if (n == NULL)
 					throw std::out_of_range("map: at");
 
-			return n->value.second;
+			return n->value->second;
 		}
 
 	/* #endregion */
 
 	/* #region modifiers */
 
+	private:
+
+		pointer _create_value(value_type const & val) {
+			pointer p = _M_alloc.allocate(1);
+			_M_alloc.construct(p, val);
+
+			return p;
+		}
+
 	public:
 		ft::pair<iterator, bool> insert (const value_type& val) {
-			ft::pair< ft::node< value_type> *, bool > tree_pair = _M_tree.insert(val);
+			ft::node<value_type> *n = _M_tree.get_node(val.first);
 
-			ft::pair<iterator, bool> map_pair(iterator(tree_pair.first), tree_pair.second);
+			if (n)
+				return ft::pair<iterator, bool>(iterator(n), false);
+			
+			pointer p = this->_create_value(val);
+			
+			n = _M_tree.insert(p);
 
-			return map_pair;
+			return ft::pair<iterator, bool>(iterator(n), true);
 		}
 
 		iterator insert (iterator position, const value_type& val) {
-			ft::node< value_type > *node = _M_tree.insert_from(val, (*position).first);
+			ft::node<value_type> *n = _M_tree.get_node(val.first);
+			
+			if (n == NULL) {
+				pointer p = this->_create_value(val);
 
-			return iterator(node);
+				if (position == end())
+					n = _M_tree.insert(p);
+				else
+					n = _M_tree.insert_from(p, &(*position));
+			}
+
+			return iterator(n);
 		}
 
 		template <class InputIterator>
@@ -395,12 +420,22 @@ namespace ft
 			this->_range_copy(first, last);
 		}
 
+	private:
+		void _delete_pair(pointer p) {
+			this->_M_alloc.destroy(p);
+			this->_M_alloc.deallocate(p, 1);
+		}
+
+	public:
+
 		void erase (iterator position) {
 			#ifdef DEBUG_MODE
 				Debug::Log << "Erasing node of key " << position->first << std::endl;
 			#endif
-			
-			_M_tree.erase(position->first);
+			ft::node< value_type> *n = _M_tree.get_node(position->first);
+			pointer p = n->value;
+			_M_tree.erase(n);
+			this->_delete_pair(p);
 		}
 
 		size_type erase (const key_type& k) {
@@ -408,8 +443,13 @@ namespace ft
 				Debug::Log << "Erasing node of key " << k << std::endl;
 			#endif
 			
-			if (_M_tree.erase(k))
+			ft::node< value_type > *n = _M_tree.get_node(k);
+			if (n) {
+				pointer p = n->value;
+				_M_tree.erase(n);
+				this->_delete_pair(p);
 				return 1;
+			}
 
 			return 0;
 		}
@@ -422,7 +462,10 @@ namespace ft
 			while (first != last) {
 				iterator to_del = first;
 				first++;
-				_M_tree.erase(to_del->first);
+				ft::node< value_type> *n = _M_tree.get_node(to_del->first);
+				pointer p = n->value;
+				_M_tree.erase(n);
+				this->_delete_pair(p);
 			}
 		}
 
@@ -431,6 +474,13 @@ namespace ft
 		}
 
 		void clear() {
+			iterator it = begin();
+			iterator ite = end();
+
+			for (; it != ite; it++) {
+				this->_delete_pair(&(*it));
+			}
+
 			_M_tree.destroy_all();
 		}
 
@@ -553,7 +603,7 @@ namespace ft
 	/* #endregion */
 
 	public:
-		allocator_type get_allocator() const { return _M_tree.get_allocator(); }
+		allocator_type get_allocator() const { return this->_M_alloc; }
 
 	};
 

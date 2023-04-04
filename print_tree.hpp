@@ -18,8 +18,8 @@
 # define P_WHITE "37"
 
 namespace ft {
-	template <class Key, class T, class Compare, class Alloc>
-	class B_TREE;
+	template < class T, class Getter, class Compare, class Alloc>
+	class binary_tree;
 
 	template <class Key, class T, class Compare, class Alloc>
 	class map;
