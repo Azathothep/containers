@@ -2,9 +2,9 @@
 # define PRINT_TREE_HPP
 
 # include <iostream>
-# include "ft/is_integral.hpp"
-# include "ft/enable_if.hpp"
-# include "ft/pair.hpp"
+# include "../ft/is_integral.hpp"
+# include "../ft/enable_if.hpp"
+# include "../ft/pair.hpp"
 
 # include "node.hpp"
 

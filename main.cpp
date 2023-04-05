@@ -5,7 +5,6 @@
 #include "ft/iterator_traits.hpp"
 #include <vector>
 
-#include "node.hpp"
 #include "ft/make_pair.hpp"
 #include "ft/pair.hpp"
 #include "map.hpp"
@@ -43,7 +42,6 @@ int main() {
 	my_map.insert( NS::make_pair(4, 'q') );
 
 	//printer.print(my_map);
-	NS::map<int, char>::iterator itc = my_map.cbegin();
 
 	NS::map<int, char>::iterator it = my_map.begin();
 	it++;

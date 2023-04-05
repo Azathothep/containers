@@ -1,7 +1,7 @@
 #ifndef BINARY_TREE_HPP
 # define BINARY_TREE_HPP
 
-# include "ft/pair.hpp"
+# include "../ft/pair.hpp"
 # include "node.hpp"
 
 namespace ft {

@@ -9,8 +9,8 @@
 # include "ft/is_integral.hpp"
 # include "ft/lexicographical_compare.hpp"
 
-# include "node.hpp"
-# include "binary_tree.hpp"
+# include "utils/node.hpp"
+# include "utils/binary_tree.hpp"
 
 namespace ft
 {
