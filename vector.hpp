@@ -109,41 +109,23 @@ namespace ft
 			return _m_ptr;
 		}
 
-		template <bool c>
-		bool operator==(const vector_iterator<T, c> &rhs) const
-		{
-			return &(**this) == &(*rhs);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator==(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
-		template <bool c>
-		bool operator!=(const vector_iterator<T, c> &rhs) const
-		{
-			return !(*this == rhs);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator!=(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
-		template <bool c>
-		bool operator<(const vector_iterator<T, c> &rhs) const
-		{
-			return &(**this) < &(*rhs);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator<(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
-		template <bool c>
-		bool operator<=(const vector_iterator<T, c> &rhs) const
-		{
-			return !(*this > rhs);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator<=(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
-		template <bool c>
-		bool operator>(const vector_iterator<T, c> &rhs) const
-		{
-			return (rhs < *this);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator>(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
-		template <bool c>
-		bool operator>=(const vector_iterator<T, c> &rhs) const
-		{
-			return !(*this < rhs);
-		}
+		template <class _T, bool _ca, bool _cb>
+		friend bool operator>=(const vector_iterator<_T, _ca>& lhs, const vector_iterator<_T, _cb>& rhs);
 
 		template <bool c>
 		difference_type operator-(const vector_iterator<T, c> &rhs) const
@@ -154,17 +136,45 @@ namespace ft
 		/* #endregion */
 	};
 
+	/* #region iterator relational operators */
+
+	template <class T, bool ca, bool cb>
+	bool operator==(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return &(*lhs) == &(*rhs);
+	}
+
+	template <class T, bool ca, bool cb>
+	bool operator!=(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return !(lhs == rhs);
+	}
+
+	template <class T, bool ca, bool cb>
+	bool operator<(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return &(*lhs) < &(*rhs);
+	}
+
+	template <class T, bool ca, bool cb>
+	bool operator<=(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return !(lhs > rhs);
+	}
+
+	template <class T, bool ca, bool cb>
+	bool operator>(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return (rhs < lhs);
+	}
+
+	template <class T, bool ca, bool cb>
+	bool operator>=(const vector_iterator<T, ca>& lhs, const vector_iterator<T, cb>& rhs) {
+		return !(lhs < rhs);
+	}
+
+	/* #endregion */
+
 	template <typename T, bool c>
 	vector_iterator<T, c> operator+ (typename vector_iterator<T, c>::difference_type n, const vector_iterator<T, c> & rhs) {
 		vector_iterator<T, c> result = rhs + n;
 		return result;
 	}
-
-	// template <typename T, bool c>
-	// vector_iterator<T, c> operator- (typename vector_iterator<T, c>::difference_type n, const vector_iterator<T, c> & rhs) {
-	// 	vector_iterator<T, c> result = rhs - n;
-	// 	return result;
-	// }
 
 	/* #endregion */
 

@@ -150,15 +150,11 @@ namespace ft {
 			return *this;
 		}
 
-		template <typename U, bool c>
-		bool operator==(const binary_tree_iterator<U, c> &rhs) const {
-			return this->_m_node == rhs.data();
-		}
+		template <typename U, bool ca, bool cb>
+		friend bool operator==(const binary_tree_iterator<U, ca> &lhs, const binary_tree_iterator<U, cb> &rhs);
 
-		template <typename U, bool c>
-		bool operator!=(const binary_tree_iterator<U, c> &rhs) const {
-			return !(*this == rhs);
-		}
+		template <typename U, bool ca, bool cb>
+		friend bool operator!=(const binary_tree_iterator<U, ca> &lhs, const binary_tree_iterator<U, cb> &rhs);
 
 	private:
 		node *_get_far_left(node *n) {
@@ -177,6 +173,16 @@ namespace ft {
 			return n;
 		}
 	};
+
+	template <typename U, bool ca, bool cb>
+	bool operator==(const binary_tree_iterator<U, ca> &lhs, const binary_tree_iterator<U, cb> &rhs) {
+		return lhs.data() == rhs.data();
+	}
+
+	template <typename U, bool ca, bool cb>
+	bool operator!=(const binary_tree_iterator<U, ca> &lhs, const binary_tree_iterator<U, cb> &rhs) {
+		return !(lhs == rhs);
+	}
 
 	/* #endregion */
 

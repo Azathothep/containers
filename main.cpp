@@ -9,8 +9,11 @@
 #include "ft/pair.hpp"
 #include "map.hpp"
 #include "set.hpp"
+#include "stack.hpp"
+
 #include <map>
 #include <set>
+#include <stack>
 
 #include <time.h>
 
@@ -22,20 +25,19 @@ int main() {
 
 	clock_t start = clock();
 
-	NS::set<int> my_set;
+	NS::stack<int> my_stack;
 
-	my_set.insert(78);
-	my_set.insert(-6);
-	my_set.insert(0);
-	my_set.insert(9);
-	my_set.insert(58);
-	my_set.insert(1119);
+	my_stack.push(78);
+	my_stack.push(-6);
+	my_stack.push(0);
+	my_stack.push(9);
+	my_stack.push(58);
+	my_stack.push(1119);
 
-	NS::set<int>::iterator it = my_set.begin();
-	NS::set<int>::iterator ite = my_set.end();
-
-	for(; it != ite; it++)
-		std::cout << "Iterator value: " << *it << std::endl;
+	while (my_stack.empty() == false) {
+		std::cout << "Stack top: " << my_stack.top() << std::endl;
+		my_stack.pop();
+	}
 
 	clock_t end = clock();
 
