@@ -1,10 +1,184 @@
 #ifndef BINARY_TREE_HPP
 # define BINARY_TREE_HPP
 
-# include "../ft/pair.hpp"
+# include "is_const.hpp"
 # include "node.hpp"
 
 namespace ft {
+
+	/* #region iterator */
+
+	template <typename T, bool constness = false>
+	class binary_tree_iterator {
+
+	public:
+		typedef typename std::forward_iterator_tag 											iterator_category;
+		typedef typename std::ptrdiff_t 													difference_type;
+		typedef typename is_const<T, constness>::type										value_type;
+		typedef	value_type*																 	pointer;
+		typedef value_type&														 			reference;
+
+	private:
+		typedef typename ft::node< T >														node;
+
+		node 		*_m_node;
+
+	public:
+		binary_tree_iterator(node *n = NULL) : _m_node(n) {}
+
+		template <bool c>
+		binary_tree_iterator(const binary_tree_iterator<T, c> &rhs) {
+			*this = rhs;
+		}
+
+		template <bool c>
+		binary_tree_iterator &operator=(const binary_tree_iterator<T, c> &rhs) {
+			reference r = *rhs;
+			(void)r;
+			this->_m_node = rhs.data();
+			return *this;
+		}
+
+		~binary_tree_iterator() {}
+
+		node *data() const { return this->_m_node; }
+
+		reference operator*() const {
+			return *(_m_node->value);
+		}
+
+		pointer operator->() const {
+			return _m_node->value;
+		}
+
+		binary_tree_iterator &operator++() {
+
+			if (_m_node->right) {
+				_m_node = _get_far_left(_m_node->right);
+			} else { // if has no right child...
+				if (_m_node->parent == NULL) { // ...and this is already god
+					return *this;
+				} else if (_m_node->child_status() == LEFT_CHILD) { // ...and is a left child
+					_m_node = _m_node->parent;
+				} else { // ...and is a right child
+					// start tests from grandparent, because here the parent is, in any case, inferior
+					_m_node = _m_node->parent;
+
+					while (_m_node->parent) { // while node is not god
+						if (_m_node->child_status() == LEFT_CHILD) {// if node branch is a left branch, then the parent is higher than the original
+							_m_node = _m_node->parent;
+							break;
+						}
+						
+						_m_node = _m_node->parent;
+					}
+				}
+			}
+
+			return *this;
+		}
+
+		binary_tree_iterator operator++(int) {
+			binary_tree_iterator iterator = *this;
+			++(*this);
+			return iterator;
+		}
+
+		binary_tree_iterator operator+(difference_type n) const
+		{
+			binary_tree_iterator result(_m_node);
+
+			for (int i = 0; i < n; i++) {
+				++result;
+			}
+
+			return result;
+		}
+
+		binary_tree_iterator operator+=(difference_type n) const
+		{
+			*this = *this + n;
+			return *this;
+		}
+
+		binary_tree_iterator &operator--() {
+
+			if (_m_node->left) {
+				_m_node = _get_far_right(_m_node->left);
+			} else { // if has no left child...
+				if (_m_node->parent == NULL) { // ...and is god -> tree is empty
+					return *this;
+				} else if (_m_node->child_status() == RIGHT_CHILD) {
+					_m_node = _m_node->parent;
+				} else { // ...and is a left child
+					_m_node = _m_node->parent;
+
+					while (_m_node->parent) { // while node is not god
+						if (_m_node->child_status() == RIGHT_CHILD) {
+							_m_node = _m_node->parent;
+							break;
+						}
+						
+						_m_node = _m_node->parent;
+					}
+				}
+			}
+			 
+			return *this;
+		}
+
+		binary_tree_iterator operator--(int) {
+				binary_tree_iterator iterator = *this;
+				--(*this);
+				return iterator;
+			}
+
+		binary_tree_iterator operator-(difference_type n) const
+		{
+			binary_tree_iterator result(_m_node);
+
+			for (int i = 0; i < n; i++) {
+				--result;
+			}
+
+			return result;
+		}
+
+		binary_tree_iterator operator-=(difference_type n) const
+		{
+			*this = *this - n;
+			return *this;
+		}
+
+		template <typename U, bool c>
+		bool operator==(const binary_tree_iterator<U, c> &rhs) const {
+			return this->_m_node == rhs.data();
+		}
+
+		template <typename U, bool c>
+		bool operator!=(const binary_tree_iterator<U, c> &rhs) const {
+			return !(*this == rhs);
+		}
+
+	private:
+		node *_get_far_left(node *n) {
+			while (n->left) {
+				n = n->left;
+			}
+			
+			return n;
+		}
+
+		node *_get_far_right(node *n) {
+			while (n->right) {
+				n = n->right;
+			}
+			
+			return n;
+		}
+	};
+
+	/* #endregion */
 
 	template < class T, class Getter, class Compare, class Alloc = std::allocator < ft::node < T > > >
 	class binary_tree {
@@ -94,7 +268,7 @@ namespace ft {
 				return n;
 			}
 
-			node *insert_from(value_type *val, value_type *from) {				
+			node *insert_from(value_type *val, const value_type *from) {				
 				node *to_insert;
 				
 				to_insert = this->get_node(KEY(from));

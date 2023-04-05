@@ -3,198 +3,17 @@
 
 # include "ft/pair.hpp"
 # include "ft/make_pair.hpp"
-# include "ft/is_const.hpp"
 # include "ft/reverse_iterator.hpp"
 # include "ft/enable_if.hpp"
 # include "ft/is_integral.hpp"
 # include "ft/lexicographical_compare.hpp"
 
+# include "utils/is_const.hpp"
 # include "utils/node.hpp"
 # include "utils/binary_tree.hpp"
 
 namespace ft
 {
-	/* #region iterator */
-
-	template <typename T, bool constness = false>
-	class map_iterator {
-
-	public:
-		typedef typename std::forward_iterator_tag 											iterator_category;
-		typedef typename std::ptrdiff_t 													difference_type;
-		typedef typename is_const<T, constness>::type										value_type;
-		typedef	value_type*																 	pointer;
-		typedef value_type&														 			reference;
-
-	private:
-		typedef typename ft::node< T >														node;
-
-		node 		*_m_node;
-
-	public:
-		map_iterator(node *n = NULL) : _m_node(n) {}
-
-		template <bool c>
-		map_iterator(const map_iterator<T, c> &rhs) {
-			*this = rhs;
-		}
-
-		template <bool c>
-		map_iterator &operator=(const map_iterator<T, c> &rhs) {
-			reference r = *rhs;
-			(void)r;
-			this->_m_node = rhs.data();
-			return *this;
-		}
-
-		~map_iterator() {}
-
-		node *data() const { return this->_m_node; }
-
-		reference operator*() const {
-			return *(_m_node->value);
-		}
-
-		pointer operator->() const {
-			return _m_node->value;
-		}
-
-		map_iterator &operator++() {
-
-			if (_m_node->right) {
-				_m_node = _get_far_left(_m_node->right);
-			} else { // if has no right child...
-				if (_m_node->parent == NULL) { // ...and this is already god
-					return *this;
-				} else if (_m_node->child_status() == LEFT_CHILD) { // ...and is a left child
-					_m_node = _m_node->parent;
-				} else { // ...and is a right child
-					// start tests from grandparent, because here the parent is, in any case, inferior
-					_m_node = _m_node->parent;
-
-					while (_m_node->parent) { // while node is not god
-						if (_m_node->child_status() == LEFT_CHILD) {// if node branch is a left branch, then the parent is higher than the original
-							_m_node = _m_node->parent;
-							break;
-						}
-						
-						_m_node = _m_node->parent;
-					}
-				}
-			}
-
-			return *this;
-		}
-
-		map_iterator operator++(int) {
-			map_iterator iterator = *this;
-			++(*this);
-			return iterator;
-		}
-
-		map_iterator operator+(difference_type n) const
-		{
-			map_iterator result(_m_node);
-
-			for (int i = 0; i < n; i++) {
-				++result;
-			}
-
-			return result;
-		}
-
-		map_iterator operator+=(difference_type n) const
-		{
-			*this = *this + n;
-			return *this;
-		}
-
-		map_iterator &operator--() {
-
-			if (_m_node->left) {
-				_m_node = _get_far_right(_m_node->left);
-			} else { // if has no left child...
-				if (_m_node->parent == NULL) { // ...and is god -> tree is empty
-					return *this;
-				} else if (_m_node->child_status() == RIGHT_CHILD) {
-					_m_node = _m_node->parent;
-				} else { // ...and is a left child
-					_m_node = _m_node->parent;
-
-					while (_m_node->parent) { // while node is not god
-						if (_m_node->child_status() == RIGHT_CHILD) {
-							_m_node = _m_node->parent;
-							break;
-						}
-						
-						_m_node = _m_node->parent;
-					}
-				}
-			}
-			 
-			return *this;
-		}
-
-		map_iterator operator--(int) {
-				map_iterator iterator = *this;
-				--(*this);
-				return iterator;
-			}
-
-		map_iterator operator-(difference_type n) const
-		{
-			map_iterator result(_m_node);
-
-			for (int i = 0; i < n; i++) {
-				--result;
-			}
-
-			return result;
-		}
-
-		map_iterator operator-=(difference_type n) const
-		{
-			*this = *this - n;
-			return *this;
-		}
-
-		template <typename U, bool c>
-		bool operator==(const map_iterator<U, c> &rhs) const {
-			return this->_m_node == rhs.data();
-		}
-
-		template <typename U, bool c>
-		bool operator!=(const map_iterator<U, c> &rhs) const {
-			return !(*this == rhs);
-		}
-
-	private:
-		node *_get_far_left(node *n) {
-			while (n->left) {
-				n = n->left;
-			}
-			
-			return n;
-		}
-
-		node *_get_far_right(node *n) {
-			while (n->right) {
-				n = n->right;
-			}
-			
-			return n;
-		}
-	};
-
-	/* #endregion */
-
-	/* #region key_getter */
-
-
-	/* #endregion */
-
-	/* #region map */
-
 	template <class Key, class T, class Compare = std::less< Key >, class Alloc = std::allocator< ft::pair< const Key, T > > >
 	class map {
 
@@ -202,25 +21,25 @@ namespace ft
 
 	public:
 
-		typedef Key 													key_type;
-		typedef T 														mapped_type;
-		typedef ft::pair<const key_type, mapped_type>					value_type;
+		typedef Key 														key_type;
+		typedef T 															mapped_type;
+		typedef ft::pair<const key_type, mapped_type>						value_type;
 
-		typedef Compare													key_compare;
-		typedef Alloc													allocator_type;
+		typedef Compare														key_compare;
+		typedef Alloc														allocator_type;
 
-		typedef typename allocator_type::reference 						reference;
-		typedef typename allocator_type::const_reference 				const_reference;
-		typedef typename allocator_type::pointer 						pointer;
-		typedef typename allocator_type::const_pointer 					const_pointer;
+		typedef typename allocator_type::reference 							reference;
+		typedef typename allocator_type::const_reference 					const_reference;
+		typedef typename allocator_type::pointer 							pointer;
+		typedef typename allocator_type::const_pointer 						const_pointer;
 
-		typedef map_iterator<value_type>								iterator;
-		typedef map_iterator<value_type, IS_CONST>						const_iterator;
-		typedef ft::reverse_iterator<iterator>							reverse_iterator;
-		typedef ft::reverse_iterator<const_iterator>					const_reverse_iterator;
+		typedef typename ft::binary_tree_iterator<value_type>				iterator;
+		typedef typename ft::binary_tree_iterator<value_type, IS_CONST>		const_iterator;
+		typedef ft::reverse_iterator<iterator>								reverse_iterator;
+		typedef ft::reverse_iterator<const_iterator>						const_reverse_iterator;
 
-		typedef typename ft::iterator_traits<iterator>::difference_type	difference_type;
-		typedef typename allocator_type::size_type						size_type;
+		typedef typename ft::iterator_traits<iterator>::difference_type		difference_type;
+		typedef typename allocator_type::size_type							size_type;
 
 	/* #endregion */
 
@@ -399,7 +218,6 @@ namespace ft
 		}
 
 	public:
-
 		void erase (iterator position) {
 			typename binary_tree::node *n = _M_tree.get_node(position->first);
 			this->_deep_delete(n);
@@ -470,7 +288,7 @@ namespace ft
 
 	/* #region operations */
 
-	// public:
+	public:
 	 	iterator find (const key_type& k) {
 			typename binary_tree::node *n = _M_tree.get_node(k);
 			
@@ -617,8 +435,6 @@ namespace ft
 	bool operator<=( const map<Key,T,Compare,Alloc>& lhs, const map<Key,T,Compare,Alloc>& rhs) {
 		return !(lhs > rhs);
 	}
-
-	/* #endregion */
 }
 
 #endif

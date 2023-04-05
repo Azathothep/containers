@@ -5,7 +5,7 @@ namespace ft {
 
 	#define IS_CONST true
 
-	template <typename T, bool constness>
+	template <typename T, bool constness = false>
 	struct is_const;
 
 	template <typename T>
