@@ -214,6 +214,12 @@ namespace ft
 			pointer _M_finish;
 			pointer _M_end_of_storage;
 
+			_VECTOR_DATA() {
+				_M_start = NULL;
+				_M_finish = NULL;
+				_M_end_of_storage = NULL;
+			}
+
 			_VECTOR_DATA& operator=(const _VECTOR_DATA& OTHER) {
 				this->_M_start = OTHER._M_start;
 				this->_M_finish = OTHER._M_finish;
@@ -234,11 +240,6 @@ namespace ft
 		explicit vector(const allocator_type &alloc = allocator_type())
 		{
 			this->_M_alloc = alloc;
-			
-			this->_M_data._M_start = NULL;
-			this->_M_data._M_finish = NULL;
-			this->_M_data._M_end_of_storage = NULL;
-			this->_create_storage(0);
 		}
 
 		explicit vector(size_type n, const value_type &val = value_type(), const allocator_type &alloc = allocator_type())
@@ -278,13 +279,18 @@ namespace ft
 
 		~vector()
 		{	
-			this->clear();
-
-			this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
+			if (this->capacity())
+				this->_wipe_memory();
 		}
 
 		vector &operator=(const vector &x)
-		{	
+		{
+			if (*this == x)
+				return *this;
+
+			if (this->capacity())
+				this->_wipe_memory();
+
 			this->_M_alloc = x.get_allocator();
 
 			this->_create_storage(x.capacity());
@@ -687,6 +693,9 @@ namespace ft
 		}
 
 		void _create_storage(size_t __n) {
+			if (__n == 0)
+				return;
+
 			this->_M_data._M_start = this->_M_alloc.allocate(__n);
 			this->_M_data._M_finish = this->_M_data._M_start;
 			this->_M_data._M_end_of_storage = this->_M_data._M_start + __n;
@@ -743,6 +752,16 @@ namespace ft
 			for (p = start; p < end; p++) {
 				this->_M_alloc.destroy(p);
 			}
+		}
+
+		void _wipe_memory() {
+			this->clear();
+
+			this->_M_alloc.deallocate(this->_M_data._M_start, this->capacity());
+
+			this->_M_data._M_start = NULL;
+			this->_M_data._M_finish = NULL;
+			this->_M_data._M_end_of_storage = NULL;
 		}
 
 		/* #endregion */
