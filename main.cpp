@@ -1328,17 +1328,8 @@ void	set_tests(void)
 	test_it(sett::ft_allocator, "allocator");
 }
 
-int main(int argc, char** argv)
+int main()
 {
-	if (argc != 2)
-	{
-		std::cerr << "Usage: ./test seed" << std::endl;
-		std::cerr << "Provide a seed please" << std::endl;
-		return 1;
-	}
-	const int seed = atoi(argv[1]);
-	srand(seed);
-
 	vector_tests();
 	map_tests();
 	stack_tests();
