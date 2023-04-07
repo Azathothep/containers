@@ -3,10 +3,10 @@
 
 #include <cstring>
 
-#include "../ft/iterator_traits.hpp"
-#include "../ft/reverse_iterator.hpp"
-#include "../ft/enable_if.hpp"
-#include "../ft/is_integral.hpp"
+#include "../utils/iterator_traits.hpp"
+#include "../utils/reverse_iterator.hpp"
+#include "../utils/enable_if.hpp"
+#include "../utils/is_integral.hpp"
 
 #include "../utils/is_const.hpp"
 

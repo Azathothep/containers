@@ -1,4 +1,4 @@
-a.out
+*.out
 log.txt
 .vscode
 *containers_test

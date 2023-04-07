@@ -1,4 +1,5 @@
-./ft.out > ftlog.txt
-./stl.out > stllog.txt
+mkdir -p logs
+./ft.out > logs/ftlog.txt
+./stl.out > logs/stllog.txt
 
-diff ftlog.txt stllog.txt > compare.txt
+diff logs/ftlog.txt logs/stllog.txt > logs/compare.txt

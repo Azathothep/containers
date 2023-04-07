@@ -1,33 +1,48 @@
-SRCS	= main.cpp \
+SRCS	= 		main.cpp
 
-NAME	= containers
+NAME	= 		containers
 
-FT_OBJ		= ftmain.o
+OBJS_DIR 	= 	objs
 
-FT_EXEC 	= ft.out
+FT_OBJ		= 	ftmain.o
+STL_OBJ		= 	stlmain.o
 
-STL_OBJ		= stlmain.o
+FT_EXEC 	= 	ft.out
+STL_EXEC 	= 	stl.out
 
-STL_EXEC 	= stl.out
+CXX		= 		c++
 
-CXX		= c++
+FLAGS	= 		-Wall -Wextra -Werror -std=c++98
 
-FLAGS	= -Wall -Wextra -Werror -std=c++98
+CONT_DIR = 		containers/
 
-INC_DIR = containers/
-
-INC_FILES =		vector.hpp \
+CONT_FILES =	vector.hpp \
 				map.hpp \
 				stack.hpp \
 				set.hpp \
 
-INCLUDES 	= $(addprefix ${INC_DIR}, ${INC_FILES});
+UTILS_DIR	=	utils/
 
-OBJS = 	${FT_OBJ} ${STL_OBJ}
+UTILS_FILES =	binary_tree.hpp \
+				enable_if.hpp \
+				equal.hpp \
+				is_const.hpp \
+				is_integral.hpp \
+				iterator_traits.hpp \
+				lexicographical_compare.hpp \
+				make_pair.hpp \
+				node.hpp \
+				pair.hpp \
+				reverse_iterator.hpp \
 
-%main.o:		main.cpp ${INCLUDES}
-				${CXX} ${FLAGS} -I${INC_DIR} -DSTL=0 -c main.cpp -o ${FT_OBJ}
-				${CXX} ${FLAGS} -I${INC_DIR} -DSTL=1 -c main.cpp -o ${STL_OBJ}
+INCLUDES 	= 	$(addprefix ${CONT_DIR}, ${CONT_FILES}) \
+				$(addprefix ${UTILS_DIR}, ${UTILS_FILES})
+
+OBJS = 			${FT_OBJ} ${STL_OBJ}
+
+%main.o:		${SRCS} ${INCLUDES}
+				${CXX} ${FLAGS} -I${CONT_DIR} -DSTL=0 -c ${SRCS} -o ${FT_OBJ}
+				${CXX} ${FLAGS} -I${CONT_DIR} -DSTL=1 -c ${SRCS} -o ${STL_OBJ}
 
 all:			${NAME}
 
@@ -37,10 +52,10 @@ ${NAME}:		${FT_EXEC} ${STL_EXEC}
 				${CXX} ${FLAGS} $< -o $@
 
 # ${FT_EXEC}:		${FT_OBJ}
-# 				${CXX} ${FLAGS} ${FT_OBJ} -o ${FT_EXEC}
+# 				${CXX} ${FLAGS} $< -o $@
 
 # ${STL_EXEC}: 	${STL_OBJ}
-# 				${CXX} ${FLAGS} ${STL_OBJ} -o ${STL_EXEC}
+# 				${CXX} ${FLAGS} $< -o $@
 
 test:			${NAME}
 				$(shell ./do_test.sh)
@@ -49,8 +64,9 @@ clean:
 			rm -f ${FT_OBJ} ${STL_OBJ}
 
 fclean:		clean
-			rm -f ${FT_EXEC}
-			rm -f ${STL_EXEC}
+			rm -f ${FT_EXEC} ${STL_EXEC}
+			rm -rf logs
+
 
 re:			fclean all
 
