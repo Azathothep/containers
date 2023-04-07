@@ -1,9 +1,6 @@
-SRCS	= 		main.cpp
-
 NAME	= 		containers
 
-FT_OBJ		= 	ftmain.o
-STL_OBJ		= 	stlmain.o
+SRCS	= 		main.cpp
 
 FT_EXEC 	= 	ft.out
 STL_EXEC 	= 	stl.out
@@ -33,6 +30,8 @@ INCLUDES 	= 	$(addprefix ${CONT_DIR}, ${CONT_FILES}) \
 				$(addprefix ${UTILS_DIR}, ${UTILS_FILES})
 
 OBJS_DIR 	= 	objs/
+FT_OBJ		= 	ftmain.o
+STL_OBJ		= 	stlmain.o
 OBJS_FILES	= 	${FT_OBJ} ${STL_OBJ}
 OBJS		= 	$(addprefix ${OBJS_DIR}, ${OBJS_FILES})
 
@@ -57,11 +56,11 @@ test:			${NAME}
 				@echo "Tests done: check the logs/ directory"
 
 clean:		
-			rm -f ${FT_OBJ} ${STL_OBJ}
+			rm -rf ${OBJS_DIR}
 
 fclean:		clean
+			rm -rf logs/
 			rm -f ${FT_EXEC} ${STL_EXEC}
-			rm -rf logs ${OBJS_DIR}
 
 
 re:			fclean all
