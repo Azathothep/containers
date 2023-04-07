@@ -1,35 +1,52 @@
 SRCS	= main.cpp \
 
-OBJS	= ${SRCS:.cpp=.o}
+NAME	= containers
 
-NAME	= ft
+FT_OBJ		= ftmain.o
 
-FT_EXEC 	= ft_tests
+FT_EXEC 	= ft.out
 
-STL_EXEC 	= stl_tests
+STL_OBJ		= stlmain.o
 
-CC		= c++
+STL_EXEC 	= stl.out
+
+CXX		= c++
 
 FLAGS	= -Wall -Wextra -Werror -std=c++98
 
-INC_DIR = containers
+INC_DIR = containers/
 
-INCLUDES =	${INC_DIR}/vector.hpp \
-			${INC_DIR}/map.hpp \
-			${INC_DIR}/stack.hpp \
-			${INC_DIR}/set.hpp \
+INC_FILES =		vector.hpp \
+				map.hpp \
+				stack.hpp \
+				set.hpp \
 
-%.o:		${SRCS}%.cpp ${INCLUDES}
-			${CC} ${FLAGS} -c $< -o $@ -Icontainers/
+INCLUDES 	= $(addprefix ${INC_DIR}, ${INC_FILES});
 
-all:	${NAME}
+OBJS = 	${FT_OBJ} ${STL_OBJ}
 
-${NAME}:	main.cpp ${INCLUDES}
-			${CC} ${FLAGS} main.cpp -DSTL=0 -Icontainers/ -o ${FT_EXEC}
-			${CC} ${FLAGS} main.cpp -DSTL=1 -Icontainers/ -o ${STL_EXEC}
+%main.o:		main.cpp ${INCLUDES}
+				${CXX} ${FLAGS} -I${INC_DIR} -DSTL=0 -c main.cpp -o ${FT_OBJ}
+				${CXX} ${FLAGS} -I${INC_DIR} -DSTL=1 -c main.cpp -o ${STL_OBJ}
+
+all:			${NAME}
+
+${NAME}:		${FT_EXEC} ${STL_EXEC}
+
+%.out:			%main.o
+				${CXX} ${FLAGS} $< -o $@
+
+# ${FT_EXEC}:		${FT_OBJ}
+# 				${CXX} ${FLAGS} ${FT_OBJ} -o ${FT_EXEC}
+
+# ${STL_EXEC}: 	${STL_OBJ}
+# 				${CXX} ${FLAGS} ${STL_OBJ} -o ${STL_EXEC}
+
+test:			${NAME}
+				$(shell ./do_test.sh)
 
 clean:		
-			rm -f ${OBJS}
+			rm -f ${FT_OBJ} ${STL_OBJ}
 
 fclean:		clean
 			rm -f ${FT_EXEC}
