@@ -16,10 +16,10 @@
 	#include <set>
 	namespace ft = std;
 #else
-	#include "map.hpp"
-	#include "stack.hpp"
-	#include "vector.hpp"
-	#include "set.hpp"
+	#include <map.hpp>
+	#include <stack.hpp>
+	#include <vector.hpp>
+	#include <set.hpp>
 #endif
 
 #include <stdlib.h>
@@ -1334,6 +1334,8 @@ int main()
 	map_tests();
 	stack_tests();
 	set_tests();
-	
+
+	std::cout << "COMPILED WITH STL=" << STL << std::endl;
+
 	return (0);
 }

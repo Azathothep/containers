@@ -1,16 +1,16 @@
 #ifndef SET_HPP
 # define SET_HPP
 
-# include "ft/pair.hpp"
-# include "ft/make_pair.hpp"
-# include "ft/reverse_iterator.hpp"
-# include "ft/enable_if.hpp"
-# include "ft/is_integral.hpp"
-# include "ft/lexicographical_compare.hpp"
+# include "../ft/pair.hpp"
+# include "../ft/make_pair.hpp"
+# include "../ft/reverse_iterator.hpp"
+# include "../ft/enable_if.hpp"
+# include "../ft/is_integral.hpp"
+# include "../ft/lexicographical_compare.hpp"
 
-# include "utils/is_const.hpp"
-# include "utils/node.hpp"
-# include "utils/binary_tree.hpp"
+# include "../utils/is_const.hpp"
+# include "../utils/node.hpp"
+# include "../utils/binary_tree.hpp"
 
 namespace ft {
 
