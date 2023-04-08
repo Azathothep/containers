@@ -28,20 +28,6 @@ cont=1
 test=2
 time=3
 
-get_tag() {
-	tag=$none
-
-	if [[ "$1" == *"CONTAINER"* ]] ; then
-		tag=$cont
-	elif [[ "$1" == *"TESTING"* ]] ; then
-		tag=$test
-	elif [[ "$1" == *"TIME"* ]] ; then
-		tag=$time
-	fi
-
-	echo $tag
-}
-
 min_space=20
 
 current=$none
@@ -49,58 +35,94 @@ compare_line=0
 ft_accumulator=""
 stl_accumulator=""
 
-echo -e "$ICyan--- TEST ------------ COMP - TIME $Color_Off"
+get_tag() {
+	tag=$none
 
-while IFS= read -r ftline && IFS= read -r stlline <&3;
-do
-	if [[ ${ftline:0:1} == '#' ]] ; 
-	then
-		current=$(get_tag $ftline)
+	if [[ ${ftline:0:1} == '#' ]] ; then
 		compare_line=0
-	else
-		current=$none
+		if [[ "$1" == *"CONTAINER"* ]] ; then
+			tag=$cont
+		elif [[ "$1" == *"TESTING"* ]] ; then
+			tag=$test
+		elif [[ "$1" == *"TIME"* ]] ; then
+			tag=$time
+		fi
 	fi
 
-	if [[ $current -eq $cont ]] ; then
-		compare_line=0
-		title=${ftline//CONTAINER/}
-		echo -e "\n$IYellow $title $Color_Off"
-	elif [[ $current -eq $test ]] ; then
-		compare_line=1
-		title=${ftline//TESTING/}
-		echo -e -n "$IPurple $title $Color_Off"
-		len=${#title}
+	echo $tag
+}
 
-		while [[ $len -lt 20 ]] ; do
-			echo -n " ";
-			len=$(($len+1))
-		done
+print_container_name() {
+	line=$1
+	title=${line//CONTAINER/}
+	echo -e "\n$IYellow $title $Color_Off"
+}
 
-	elif [[ $current -eq $time ]] ; then
-		compare_line=0
-		if diff <(echo "$ft_accumulator") <(echo "$stl_accumulator") > /dev/null; then
-			echo -e -n "✅"
-		else
-			echo -e -n "❌"
-		fi
+print_test_name() {
+	line=$1
+	title=${line//TESTING/}
+	echo -e -n "$IPurple $title $Color_Off"
+	len=${#title}
 
-		fttime=$(echo "$ftline" | sed 's/[^0-9]*//g')
-		stltime=$(echo "$stlline" | sed 's/[^0-9]*//g')
-		difftime=$fttime
-		if [[ $stltime -ne "0" ]] ; then
-			difftime=$(echo "scale=2; $fttime / $stltime" | bc)
-		fi
-		
-		if [[ $(echo "$difftime < 20" |bc -l) ]] ; then
-			echo -e "    $IGreen x$difftime $Color_Off"
-		else
-			echo -e "    $IRed x$difftime $Color_Off"
-		fi
+	while [[ $len -lt $min_space ]] ; do
+		echo -n " ";
+		len=$(($len+1))
+	done
+}
 
-	elif [[ $compare_line -eq 1 ]] ; then
-		ft_accumulator="$ftline"
-		stl_accumulator="$stlline"
-	fi;
-done <$ftlog 3<$stllog
+check_diff() {
+	if diff <(echo "$1") <(echo "$2") > /dev/null; then
+		echo -e -n "✅"
+	else
+		echo -e -n "❌"
+	fi
+}
 
+print_time() {
+	difftime=$1
+	if [[ $2 -ne "0" ]] ; then
+		difftime=$(echo "scale=2; $1 / $2" | bc)
+	fi
+	
+	if [[ $(echo "$difftime < 20" |bc -l) ]] ; then
+		echo -e "    $IGreen x$difftime $Color_Off"
+	else
+		echo -e "    $IRed x$difftime $Color_Off"
+	fi
+}
+
+make_test() {
+
+	echo -e "\n$ICyan--- TEST ------------ COMP - TIME $Color_Off"
+
+	while IFS= read -r ftline && IFS= read -r stlline <&3;
+	do
+		current=$(get_tag $ftline)
+
+		if [[ $current -eq $cont ]] ; then
+			print_container_name "$ftline"
+
+		elif [[ $current -eq $test ]] ; then
+			compare_line=1
+			print_test_name "$ftline"
+
+		elif [[ $current -eq $time ]] ; then
+			check_diff "$ft_accumulator" "$stl_accumulator"
+			ft_accumulator=""
+			stl_accumulator=""
+
+			fttime=$(echo "$ftline" | sed 's/[^0-9]*//g')
+			stltime=$(echo "$stlline" | sed 's/[^0-9]*//g')
+			print_time "$fttime" "$stltime"
+
+		elif [[ $compare_line -eq 1 ]] ; then
+			ft_accumulator="$ftline"
+			stl_accumulator="$stlline"
+		fi;
+
+	done <$ftlog 3<$stllog
+
+}
+
+make_test
 exit 0
