@@ -233,8 +233,11 @@ namespace ft {
 				this->_god.left = this->_root;
 				rhs._god.left = rhs._root;
 
-				this->_root->parent = this->_god_p;
-				rhs._root->parent = rhs._god_p;
+				if (this->_root)
+					this->_root->parent = this->_god_p;
+
+				if (rhs._root)
+					rhs._root->parent = rhs._god_p;
 
 				int t_size = this->size;
 				this->size = rhs.size;
