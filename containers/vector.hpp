@@ -234,12 +234,12 @@ namespace ft
 		/* #region public methods */
 	public:
 		/* #region constructors & destructor */
-		explicit vector(const allocator_type &alloc = allocator_type())
+		explicit vector(const allocator_type &alloc = allocator_type()) : _M_data(_VECTOR_DATA())
 		{
 			this->_M_alloc = alloc;
 		}
 
-		explicit vector(size_type n, const value_type &val = value_type(), const allocator_type &alloc = allocator_type())
+		explicit vector(size_type n, const value_type &val = value_type(), const allocator_type &alloc = allocator_type()) : _M_data(_VECTOR_DATA())
 		{
 			this->_M_alloc = alloc;
 
@@ -249,7 +249,7 @@ namespace ft
 		}
 
 		template <class InputIterator>
-		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL)
+		vector(InputIterator first, InputIterator last, const allocator_type &alloc = allocator_type(), typename ft::enable_if< !ft::is_integral<InputIterator>::value >::type* = NULL) : _M_data(_VECTOR_DATA())
 		{
 			this->_M_alloc = alloc;
 
@@ -269,7 +269,7 @@ namespace ft
 			this->_M_data._M_finish = this->_M_data._M_start + size;
 		}
 
-		vector(const vector &x)
+		vector(const vector &x) : _M_data(_VECTOR_DATA())
 		{
 			*this = x;
 		}
@@ -282,19 +282,10 @@ namespace ft
 
 		vector &operator=(const vector &x)
 		{
-			if (*this == x)
+			if (this == &x)
 				return *this;
 
-			if (this->capacity())
-				this->_wipe_memory();
-
-			this->_M_alloc = x.get_allocator();
-
-			this->_create_storage(x.capacity());
-
-			this->_range_copy(x._M_data._M_start, this->_M_data._M_start, x.size());
-
-			this->_M_data._M_finish = this->_M_data._M_start + x.size();
+			this->assign(x.begin(), x.end());
 
 			return *this;
 		}
@@ -368,7 +359,7 @@ namespace ft
 				return;
 
 			if (__n > this->max_size())	
-				throw new std::length_error("vector reserve");
+				throw std::length_error("vector::reserve");
 
 			this->_realloc(__n);
 		}
@@ -706,41 +697,31 @@ namespace ft
 
 			this->_create_storage(new_capacity);
 
-			memmove(this->_M_data._M_start, old_start, old_size * sizeof(value_type));
+			//memmove((void *)this->_M_data._M_start, (void *)old_start, old_size * sizeof(value_type));
+			this->_range_move(this->_M_data._M_start, old_start, old_size);
 
 			this->_M_data._M_finish = this->_M_data._M_start + old_size;
+
+			for (size_type i = 0; i < old_size; i++)
+				this->_M_alloc.destroy(old_start + i);
 
 			this->_M_alloc.deallocate(old_start, old_capacity);
 		}
 
-		void _range_copy(pointer _src, pointer _dest, size_type _size)
-		{
-			// Checking if range overlaps
-			if (_src < _dest && (_src + _size > _dest))
-			{
-				pointer p_src = _src + _size - 1;
-				pointer p_dest = _dest + _size - 1;
-
-				for (size_type i = 0; i < _size; i++)
-				{
-					*p_dest = *p_src;
-					p_src--;
-					p_dest--;
-				}
-			}
-			else {
-				pointer p_src = _src;
-				pointer p_dest = _dest;
-
-				// This moves pointers, it doesn't copy the object !
-				for (size_type i = 0; i < _size; i++)
-				{
-					*p_dest = *p_src;
-					p_src++;
-					p_dest++;
-				}
-			}
+		void _range_move(pointer dest, pointer src, size_type size) {
+			pointer buffer = this->_M_alloc.allocate(size);
 			
+			for (size_type i = 0; i < size; i++)
+				this->_M_alloc.construct(buffer + i, src[i]);
+			// for (size_type i = 0; i < size; i++)
+			// 	this->_M_alloc.destroy(src + i);
+			for (size_type i = 0; i < size; i++)
+				this->_M_alloc.construct(dest + i, buffer[i]);
+			
+			for (size_type i = 0; i < size; i++)
+				this->_M_alloc.destroy(buffer + i);
+
+			this->_M_alloc.deallocate(buffer, size);
 		}
 
 		void _destroy(pointer start, pointer end) {
@@ -822,6 +803,12 @@ namespace ft
 	template <class T, class Alloc>
 	bool operator>= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs) {
 		return !(lhs < rhs);
+	}
+
+	template <class T, class Alloc>
+	void swap (vector<T,Alloc>& x, vector<T,Alloc>& y)
+	{
+		x.swap(y);
 	}
 
 	/* #endregion */
