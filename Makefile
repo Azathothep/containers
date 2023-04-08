@@ -52,8 +52,7 @@ ${NAME}:		${FT_EXEC} ${STL_EXEC}
 				${CXX} ${FLAGS} $< -o $@
 
 test:			${NAME}
-				$(shell ./do_test.sh)
-				@echo "Tests done: check the logs/ directory"
+				@bash ./do_test.sh
 
 clean:		
 			rm -rf ${OBJS_DIR}

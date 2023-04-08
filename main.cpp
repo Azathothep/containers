@@ -45,30 +45,16 @@ public:
 
 void	test_header(std::string title)
 {
-	std::cout << "---------------------------\n";
-	int space = (20 - title.length()) / 2;
-	std::cout << "----";
-	for (int i = 0; i < space; i += 1)
-		std::cout << " ";
-	std::cout << "\x1B[33m" << title << "\033[0m";
-	for (int i = 0; i < space; i += 1)
-		std::cout << " ";
-	std::cout << "----";
-    std::cout << "\n---------------------------\n";
+	//std::cout << "---------------------------\n";
+	std::cout << "#TESTING: " << title << std::endl << std::endl;
+    //std::cout << "\n---------------------------\n";
 }
 
 void	container_header(std::string title)
 {
-	std::cout << "---------------------------\n";
-	int space = (20 - title.length()) / 2;
-	std::cout << "----";
-	for (int i = 0; i < space; i += 1)
-		std::cout << " ";
-	std::cout << "\x1B[31m" << title << "\033[0m";
-	for (int i = 0; i < space; i += 1)
-		std::cout << " ";
-	std::cout << "----";
-    std::cout << "\n---------------------------\n";
+	std::cout << "------------------------------\n";
+	std::cout << "#CONTAINER: " << title;
+    std::cout << "\n-----------------------------\n";
 }
 
 void	print_timestamp(struct timeval start, struct timeval end)
@@ -78,9 +64,8 @@ void	print_timestamp(struct timeval start, struct timeval end)
     time_taken = end.tv_usec - start.tv_usec;
 	time_taken = (time_taken + (end.tv_usec - start.tv_usec));
 
-	std::cout << "( " << std::fixed
-         << time_taken << std::setprecision(2);
-    std::cout << " microsec )" << std::endl;
+	std::cout << "#TIME (microsec): " << std::fixed
+         << time_taken << std::setprecision(2) << std::endl;
 }
 
 void	test_it(void (*ft)(void), std::string title)
