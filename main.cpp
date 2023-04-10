@@ -57,15 +57,11 @@ void	container_header(std::string title)
     std::cout << "\n-----------------------------\n";
 }
 
-void	print_timestamp(struct timeval start, struct timeval end)
-{
-	suseconds_t time_taken;
-  
-    time_taken = end.tv_usec - start.tv_usec;
-	time_taken = (time_taken + (end.tv_usec - start.tv_usec));
+void print_timestamp(clock_t start, clock_t end) {
+	unsigned long ticks = (end - start);
 
-	std::cout << "#TIME (microsec): " << std::fixed
-         << time_taken << std::setprecision(2) << std::endl;
+	std::cout << "#TIME ticks: " << std::fixed
+         << ticks << std::setprecision(2) << std::endl;
 }
 
 void	test_it(void (*ft)(void), std::string title)
@@ -73,12 +69,10 @@ void	test_it(void (*ft)(void), std::string title)
 	std::cout << std::endl;
 	test_header(title);
 
-	struct timeval start, end;
-    gettimeofday(&start, NULL);
+	clock_t start = clock();
 	ft();
-	gettimeofday(&end, NULL);
+	clock_t end = clock();
 	print_timestamp(start, end);
-
 	std::cout << std::endl;
 }
 
